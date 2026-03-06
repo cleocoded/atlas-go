@@ -28,3 +28,5 @@ contracts/cache/
 
 # vercel
 .vercel
+v1.md
+.env.example
