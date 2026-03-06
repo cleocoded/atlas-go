@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#1a2744"/>
+      <stop offset="100%" stop-color="#0d0d1a"/>
+    </radialGradient>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0f1a33"/>
+      <stop offset="100%" stop-color="#1a3355"/>
+    </linearGradient>
+    <linearGradient id="building1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2a2a5e"/>
+      <stop offset="100%" stop-color="#1a1a3e"/>
+    </linearGradient>
+    <linearGradient id="building2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a5f"/>
+      <stop offset="100%" stop-color="#0f2040"/>
+    </linearGradient>
+    <clipPath id="circle">
+      <circle cx="200" cy="200" r="196"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <circle cx="200" cy="200" r="196" fill="url(#bg)"/>
+
+  <!-- Sky gradient -->
+  <rect x="4" y="4" width="392" height="270" fill="url(#sky)" clip-path="url(#circle)"/>
+
+  <!-- Moon -->
+  <circle cx="310" cy="70" r="28" fill="#FFF5E0" clip-path="url(#circle)"/>
+  <circle cx="322" cy="62" r="24" fill="#1a2744" clip-path="url(#circle)"/>
+  <!-- Moon glow -->
+  <circle cx="310" cy="70" r="38" fill="#FFF5E0" opacity="0.06" clip-path="url(#circle)"/>
+
+  <!-- Stars -->
+  <g clip-path="url(#circle)" opacity="0.8">
+    <circle cx="50" cy="55" r="1.5" fill="white"/>
+    <circle cx="90" cy="35" r="1" fill="white"/>
+    <circle cx="140" cy="50" r="1.5" fill="white"/>
+    <circle cx="180" cy="30" r="1" fill="white"/>
+    <circle cx="230" cy="45" r="1.5" fill="white"/>
+    <circle cx="65" cy="90" r="1" fill="white"/>
+    <circle cx="170" cy="80" r="1" fill="white"/>
+    <circle cx="350" cy="110" r="1" fill="white"/>
+  </g>
+
+  <!-- SF Skyline buildings -->
+  <g clip-path="url(#circle)">
+    <!-- Building 1 (Salesforce Tower-like) -->
+    <rect x="170" y="100" width="32" height="170" rx="3" fill="url(#building1)"/>
+    <polygon points="170,100 186,70 202,100" fill="#1e2a4e"/>
+    <!-- Windows grid b1 -->
+    <g fill="#FFB84D" opacity="0.6">
+      <rect x="176" y="108" width="5" height="5" rx="1"/>
+      <rect x="186" y="108" width="5" height="5" rx="1"/>
+      <rect x="196" y="108" width="5" height="5" rx="1"/>
+      <rect x="176" y="120" width="5" height="5" rx="1"/>
+      <rect x="186" y="120" width="5" height="5" rx="1"/>
+      <rect x="196" y="120" width="5" height="5" rx="1"/>
+      <rect x="176" y="132" width="5" height="5" rx="1"/>
+      <rect x="196" y="132" width="5" height="5" rx="1"/>
+      <rect x="176" y="144" width="5" height="5" rx="1"/>
+      <rect x="186" y="144" width="5" height="5" rx="1"/>
+      <rect x="186" y="156" width="5" height="5" rx="1"/>
+      <rect x="196" y="156" width="5" height="5" rx="1"/>
+    </g>
+
+    <!-- Building 2 (left) -->
+    <rect x="110" y="150" width="44" height="120" rx="2" fill="url(#building2)"/>
+    <g fill="#A0A0B8" opacity="0.4">
+      <rect x="116" y="158" width="6" height="6" rx="1"/>
+      <rect x="128" y="158" width="6" height="6" rx="1"/>
+      <rect x="140" y="158" width="6" height="6" rx="1"/>
+      <rect x="116" y="172" width="6" height="6" rx="1"/>
+      <rect x="128" y="172" width="6" height="6" rx="1"/>
+      <rect x="140" y="172" width="6" height="6" rx="1"/>
+      <rect x="116" y="186" width="6" height="6" rx="1"/>
+      <rect x="140" y="186" width="6" height="6" rx="1"/>
+      <rect x="128" y="200" width="6" height="6" rx="1"/>
+      <rect x="140" y="200" width="6" height="6" rx="1"/>
+    </g>
+
+    <!-- Building 3 (right) -->
+    <rect x="246" y="135" width="40" height="135" rx="2" fill="url(#building1)"/>
+    <g fill="#7B68EE" opacity="0.5">
+      <rect x="252" y="143" width="6" height="6" rx="1"/>
+      <rect x="264" y="143" width="6" height="6" rx="1"/>
+      <rect x="276" y="143" width="6" height="6" rx="1"/>
+      <rect x="252" y="157" width="6" height="6" rx="1"/>
+      <rect x="264" y="157" width="6" height="6" rx="1"/>
+      <rect x="276" y="157" width="6" height="6" rx="1"/>
+      <rect x="252" y="171" width="6" height="6" rx="1"/>
+      <rect x="276" y="171" width="6" height="6" rx="1"/>
+      <rect x="264" y="185" width="6" height="6" rx="1"/>
+    </g>
+
+    <!-- Building 4 (far left) -->
+    <rect x="50" y="175" width="38" height="95" rx="2" fill="#151530"/>
+    <g fill="#A0A0B8" opacity="0.3">
+      <rect x="57" y="183" width="5" height="5" rx="1"/>
+      <rect x="68" y="183" width="5" height="5" rx="1"/>
+      <rect x="79" y="183" width="5" height="5" rx="1"/>
+      <rect x="57" y="197" width="5" height="5" rx="1"/>
+      <rect x="79" y="197" width="5" height="5" rx="1"/>
+      <rect x="68" y="211" width="5" height="5" rx="1"/>
+    </g>
+
+    <!-- Building 5 (far right) -->
+    <rect x="312" y="160" width="36" height="110" rx="2" fill="#151530"/>
+    <g fill="#A0A0B8" opacity="0.3">
+      <rect x="319" y="168" width="5" height="5" rx="1"/>
+      <rect x="330" y="168" width="5" height="5" rx="1"/>
+      <rect x="341" y="168" width="5" height="5" rx="1"/>
+      <rect x="319" y="182" width="5" height="5" rx="1"/>
+      <rect x="341" y="182" width="5" height="5" rx="1"/>
+    </g>
+
+    <!-- Ground / street -->
+    <rect x="4" y="270" width="392" height="126" fill="#0a0a18"/>
+    <!-- Street lights -->
+    <g fill="#FFB84D" opacity="0.7">
+      <line x1="80" y1="270" x2="80" y2="290" stroke="#555" stroke-width="2"/>
+      <circle cx="80" cy="268" r="4"/>
+      <line x1="200" y1="270" x2="200" y2="290" stroke="#555" stroke-width="2"/>
+      <circle cx="200" cy="268" r="4"/>
+      <line x1="320" y1="270" x2="320" y2="290" stroke="#555" stroke-width="2"/>
+      <circle cx="320" cy="268" r="4"/>
+    </g>
+    <!-- Street lines -->
+    <g stroke="#333" stroke-width="1" opacity="0.5">
+      <line x1="4" y1="310" x2="396" y2="310"/>
+      <line x1="4" y1="340" x2="396" y2="340"/>
+    </g>
+    <!-- PayPal text on building -->
+    <text x="186" y="215" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#FFB84D" opacity="0.9">PP</text>
+  </g>
+
+  <text x="200" y="350" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFB84D" letter-spacing="2">PAYPAL DOWNTOWN</text>
+  <text x="200" y="366" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#A0A0B8" letter-spacing="1">CITY LIGHTS</text>
+
+  <circle cx="200" cy="200" r="196" fill="none" stroke="#A0A0B8" stroke-width="2" opacity="0.4"/>
+</svg>

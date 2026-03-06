@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1a0533"/>
+      <stop offset="100%" stop-color="#0a0015"/>
+    </radialGradient>
+    <linearGradient id="aurora1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00E5A0" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#7B68EE" stop-opacity="0.4"/>
+    </linearGradient>
+    <linearGradient id="aurora2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7B68EE" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#FFB84D" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="bridge2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2c3e50"/>
+      <stop offset="100%" stop-color="#34495e"/>
+    </linearGradient>
+    <clipPath id="circle">
+      <circle cx="200" cy="200" r="196"/>
+    </clipPath>
+    <filter id="blur-aurora">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <circle cx="200" cy="200" r="196" fill="url(#bg)"/>
+
+  <!-- Stars -->
+  <g clip-path="url(#circle)">
+    <circle cx="40" cy="40" r="1.5" fill="white" opacity="0.9"/>
+    <circle cx="80" cy="25" r="1" fill="white" opacity="0.7"/>
+    <circle cx="130" cy="50" r="2" fill="white" opacity="0.9"/>
+    <circle cx="170" cy="30" r="1" fill="white" opacity="0.6"/>
+    <circle cx="220" cy="45" r="1.5" fill="white" opacity="0.8"/>
+    <circle cx="270" cy="20" r="1" fill="white" opacity="0.7"/>
+    <circle cx="330" cy="55" r="2" fill="white" opacity="0.9"/>
+    <circle cx="360" cy="35" r="1" fill="white" opacity="0.6"/>
+    <circle cx="55" cy="75" r="1" fill="white" opacity="0.5"/>
+    <circle cx="300" cy="70" r="1.5" fill="white" opacity="0.8"/>
+    <circle cx="380" cy="90" r="1" fill="white" opacity="0.6"/>
+    <circle cx="25" cy="110" r="1" fill="white" opacity="0.5"/>
+    <!-- Bright star -->
+    <circle cx="150" cy="70" r="2.5" fill="white"/>
+    <line x1="150" y1="64" x2="150" y2="58" stroke="white" stroke-width="1" opacity="0.6"/>
+    <line x1="150" y1="76" x2="150" y2="82" stroke="white" stroke-width="1" opacity="0.6"/>
+    <line x1="144" y1="70" x2="138" y2="70" stroke="white" stroke-width="1" opacity="0.6"/>
+    <line x1="156" y1="70" x2="162" y2="70" stroke="white" stroke-width="1" opacity="0.6"/>
+  </g>
+
+  <!-- Aurora blobs (blurred, layered) -->
+  <g clip-path="url(#circle)" filter="url(#blur-aurora)">
+    <ellipse cx="150" cy="150" rx="120" ry="60" fill="url(#aurora1)" opacity="0.7"/>
+    <ellipse cx="260" cy="130" rx="100" ry="50" fill="url(#aurora2)" opacity="0.6"/>
+    <ellipse cx="200" cy="170" rx="80" ry="40" fill="#00E5A0" opacity="0.3"/>
+  </g>
+
+  <!-- Bay Bridge (Oakland Bay Bridge silhouette) -->
+  <g clip-path="url(#circle)">
+    <!-- Water -->
+    <rect x="4" y="260" width="392" height="136" fill="#0d2a3d"/>
+    <!-- Water shimmer -->
+    <g opacity="0.2">
+      <line x1="40" y1="275" x2="100" y2="275" stroke="#00E5A0" stroke-width="1.5"/>
+      <line x1="160" y1="285" x2="240" y2="285" stroke="#7B68EE" stroke-width="1.5"/>
+      <line x1="280" y1="278" x2="360" y2="278" stroke="#00E5A0" stroke-width="1.5"/>
+    </g>
+    <!-- Bridge deck -->
+    <rect x="20" y="250" width="360" height="9" rx="2" fill="url(#bridge2)"/>
+    <!-- Bridge lights -->
+    <g fill="#FFB84D" opacity="0.8">
+      <circle cx="40" cy="249" r="1.5"/>
+      <circle cx="70" cy="249" r="1.5"/>
+      <circle cx="100" cy="249" r="1.5"/>
+      <circle cx="130" cy="249" r="1.5"/>
+      <circle cx="160" cy="249" r="1.5"/>
+      <circle cx="190" cy="249" r="1.5"/>
+      <circle cx="220" cy="249" r="1.5"/>
+      <circle cx="250" cy="249" r="1.5"/>
+      <circle cx="280" cy="249" r="1.5"/>
+      <circle cx="310" cy="249" r="1.5"/>
+      <circle cx="340" cy="249" r="1.5"/>
+      <circle cx="370" cy="249" r="1.5"/>
+    </g>
+    <!-- Left suspension tower -->
+    <rect x="115" y="180" width="12" height="80" rx="2" fill="#2c3e50"/>
+    <rect x="110" y="178" width="22" height="7" rx="2" fill="#34495e"/>
+    <!-- Right tower -->
+    <rect x="275" y="188" width="12" height="72" rx="2" fill="#2c3e50"/>
+    <rect x="270" y="186" width="22" height="7" rx="2" fill="#34495e"/>
+    <!-- Cable -->
+    <path d="M20 250 Q121 210 200 240 Q279 210 380 250" fill="none" stroke="#5d6d7e" stroke-width="2.5"/>
+  </g>
+
+  <!-- Flow brand logo (stylized F) -->
+  <g transform="translate(168, 295)">
+    <rect x="0" y="0" width="6" height="35" rx="3" fill="#00E5A0"/>
+    <rect x="0" y="0" width="28" height="6" rx="3" fill="#00E5A0"/>
+    <rect x="0" y="13" width="18" height="6" rx="3" fill="#00E5A0"/>
+  </g>
+
+  <text x="210" y="320" text-anchor="start" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#00E5A0" letter-spacing="1">LOW</text>
+  <text x="200" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#A0A0B8" letter-spacing="1">BAY BRIDGE BLAZE</text>
+  <text x="200" y="356" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#7B68EE">✦ LEGENDARY ✦</text>
+
+  <!-- Outer glow ring -->
+  <circle cx="200" cy="200" r="196" fill="none" stroke="#00E5A0" stroke-width="2" opacity="0.5"/>
+  <circle cx="200" cy="200" r="192" fill="none" stroke="#7B68EE" stroke-width="1" opacity="0.3"/>
+</svg>

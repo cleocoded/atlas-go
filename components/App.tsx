@@ -1,8 +1,9 @@
 'use client'
 import { useEffect } from 'react'
-import { usePrivy }       from '@privy-io/react-auth'
-import { useAppStore }    from '@/store/appStore'
-import { Toast }          from '@/components/ui/Toast'
+import { usePrivy }        from '@privy-io/react-auth'
+import { useAppStore }     from '@/store/appStore'
+import { useOnChainSync }  from '@/lib/useOnChainSync'
+import { Toast }           from '@/components/ui/Toast'
 import { MapScreen }      from '@/components/screens/MapScreen'
 import { ClaimScreen }    from '@/components/screens/ClaimScreen'
 import { CollectionScreen }  from '@/components/screens/CollectionScreen'
@@ -23,6 +24,9 @@ export function App() {
       connectWallet(privyUser.wallet.address)
     }
   }, [authenticated, privyUser, connectWallet])
+
+  // Sync on-chain balance + boost state every 30s
+  useOnChainSync()
 
   return (
     <main

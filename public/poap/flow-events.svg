@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="60%" r="60%">
+      <stop offset="0%" stop-color="#1a0a2e"/>
+      <stop offset="100%" stop-color="#0a0515"/>
+    </radialGradient>
+    <linearGradient id="sunset" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B35"/>
+      <stop offset="40%" stop-color="#E8445A"/>
+      <stop offset="80%" stop-color="#8B1A6B"/>
+      <stop offset="100%" stop-color="#1a0a2e"/>
+    </linearGradient>
+    <radialGradient id="sundown" cx="50%" cy="100%" r="60%">
+      <stop offset="0%" stop-color="#FFB84D" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#E8445A" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#8B1A6B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ocean" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a3050"/>
+      <stop offset="100%" stop-color="#0a1525"/>
+    </linearGradient>
+    <clipPath id="circle">
+      <circle cx="200" cy="200" r="196"/>
+    </clipPath>
+    <filter id="glow-sun">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <circle cx="200" cy="200" r="196" fill="url(#bg)"/>
+
+  <!-- Sunset sky -->
+  <rect x="4" y="4" width="392" height="260" fill="url(#sunset)" clip-path="url(#circle)"/>
+
+  <!-- Sun glow at horizon -->
+  <ellipse cx="200" cy="240" rx="160" ry="80" fill="url(#sundown)" clip-path="url(#circle)"/>
+
+  <!-- Setting sun -->
+  <circle cx="200" cy="240" r="45" fill="#FFB84D" filter="url(#glow-sun)" clip-path="url(#circle)"/>
+  <!-- Sun reflection on water -->
+  <rect x="165" y="240" width="70" height="100" fill="#FFB84D" opacity="0.15" clip-path="url(#circle)"/>
+
+  <!-- Ocean -->
+  <rect x="4" y="238" width="392" height="158" fill="url(#ocean)" clip-path="url(#circle)"/>
+
+  <!-- Wave lines -->
+  <g clip-path="url(#circle)" opacity="0.3">
+    <path d="M4 260 Q60 255 120 260 Q180 265 240 260 Q300 255 360 260 L396 260" fill="none" stroke="#7fc3e8" stroke-width="1.5"/>
+    <path d="M4 278 Q70 274 140 278 Q210 282 280 278 Q340 274 396 278" fill="none" stroke="#7fc3e8" stroke-width="1.5"/>
+    <path d="M4 296 Q80 292 160 296 Q240 300 320 296 Q360 292 396 296" fill="none" stroke="#7fc3e8" stroke-width="1.5"/>
+  </g>
+
+  <!-- Sunset reflection path -->
+  <polygon points="165,240 235,240 220,396 180,396" fill="#FFB84D" opacity="0.08" clip-path="url(#circle)"/>
+
+  <!-- Sunset District hills silhouette -->
+  <g clip-path="url(#circle)">
+    <path d="M4 240 Q40 200 80 210 Q110 205 140 215 Q160 208 190 220 L4 240 Z" fill="#1a0a2e" opacity="0.8"/>
+    <path d="M210 225 Q240 205 280 215 Q310 205 340 218 Q370 210 396 225 L396 240 L210 240 Z" fill="#1a0a2e" opacity="0.8"/>
+    <!-- Victorian houses silhouette (Painted Ladies) -->
+    <g fill="#1a0a2e">
+      <rect x="95" y="218" width="15" height="22"/>
+      <polygon points="95,218 102,210 110,218"/>
+      <rect x="113" y="220" width="15" height="20"/>
+      <polygon points="113,220 120,212 128,220"/>
+      <rect x="131" y="217" width="15" height="23"/>
+      <polygon points="131,217 138,209 146,217"/>
+      <rect x="149" y="221" width="15" height="19"/>
+      <polygon points="149,221 156,214 164,221"/>
+      <!-- Windows -->
+      <g fill="#E8445A" opacity="0.7">
+        <rect x="99" y="222" width="3" height="4"/>
+        <rect x="105" y="222" width="3" height="4"/>
+        <rect x="117" y="224" width="3" height="4"/>
+        <rect x="123" y="224" width="3" height="4"/>
+        <rect x="135" y="221" width="3" height="4"/>
+        <rect x="141" y="221" width="3" height="4"/>
+      </g>
+    </g>
+    <!-- Palm tree left -->
+    <line x1="55" y1="240" x2="55" y2="205" stroke="#1a0a2e" stroke-width="3"/>
+    <ellipse cx="55" cy="203" rx="12" ry="6" fill="#1a0a2e"/>
+    <ellipse cx="47" cy="207" rx="9" ry="4" fill="#1a0a2e" transform="rotate(-30,47,207)"/>
+    <ellipse cx="63" cy="207" rx="9" ry="4" fill="#1a0a2e" transform="rotate(30,63,207)"/>
+    <!-- Palm tree right -->
+    <line x1="345" y1="225" x2="345" y2="198" stroke="#1a0a2e" stroke-width="3"/>
+    <ellipse cx="345" cy="196" rx="12" ry="6" fill="#1a0a2e"/>
+    <ellipse cx="337" cy="200" rx="9" ry="4" fill="#1a0a2e" transform="rotate(-30,337,200)"/>
+    <ellipse cx="353" cy="200" rx="9" ry="4" fill="#1a0a2e" transform="rotate(30,353,200)"/>
+  </g>
+
+  <!-- Stars appearing at dusk -->
+  <g clip-path="url(#circle)" opacity="0.5">
+    <circle cx="60" cy="60" r="1.5" fill="white"/>
+    <circle cx="100" cy="40" r="1" fill="white"/>
+    <circle cx="290" cy="55" r="1.5" fill="white"/>
+    <circle cx="350" cy="40" r="1" fill="white"/>
+    <circle cx="320" cy="75" r="1" fill="white"/>
+  </g>
+
+  <text x="200" y="342" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#7B68EE" letter-spacing="2">FLOW HACKATHON</text>
+  <text x="200" y="358" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#A0A0B8" letter-spacing="1">SUNSET DISTRICT BADGE</text>
+  <text x="200" y="373" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#7B68EE">✦ RARE ✦</text>
+
+  <circle cx="200" cy="200" r="196" fill="none" stroke="#7B68EE" stroke-width="2" opacity="0.5"/>
+  <circle cx="200" cy="200" r="192" fill="none" stroke="#E8445A" stroke-width="1" opacity="0.2"/>
+</svg>

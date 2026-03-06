@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1a1a4e"/>
+      <stop offset="100%" stop-color="#0d0d1a"/>
+    </radialGradient>
+    <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFE066"/>
+      <stop offset="60%" stop-color="#FFB84D"/>
+      <stop offset="100%" stop-color="#FF8C00"/>
+    </radialGradient>
+    <linearGradient id="water" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a6fa8"/>
+      <stop offset="100%" stop-color="#0d3d5e"/>
+    </linearGradient>
+    <linearGradient id="bridge" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c0392b"/>
+      <stop offset="100%" stop-color="#e74c3c"/>
+    </linearGradient>
+    <clipPath id="circle">
+      <circle cx="200" cy="200" r="196"/>
+    </clipPath>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <circle cx="200" cy="200" r="196" fill="url(#bg)"/>
+
+  <!-- Stars -->
+  <g clip-path="url(#circle)" opacity="0.7">
+    <circle cx="60" cy="50" r="1.5" fill="white"/>
+    <circle cx="120" cy="30" r="1" fill="white"/>
+    <circle cx="180" cy="60" r="1.5" fill="white"/>
+    <circle cx="280" cy="40" r="1" fill="white"/>
+    <circle cx="340" cy="70" r="1.5" fill="white"/>
+    <circle cx="90" cy="90" r="1" fill="white"/>
+    <circle cx="310" cy="85" r="1" fill="white"/>
+    <circle cx="50" cy="120" r="1" fill="white"/>
+    <circle cx="355" cy="110" r="1" fill="white"/>
+  </g>
+
+  <!-- Sunrise glow -->
+  <ellipse cx="200" cy="220" rx="90" ry="60" fill="#FF8C00" opacity="0.15" clip-path="url(#circle)"/>
+
+  <!-- Sun -->
+  <circle cx="200" cy="185" r="42" fill="url(#sun)" filter="url(#glow)" clip-path="url(#circle)"/>
+
+  <!-- Sun rays -->
+  <g clip-path="url(#circle)" opacity="0.5">
+    <line x1="200" y1="130" x2="200" y2="115" stroke="#FFE066" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="200" y1="240" x2="200" y2="255" stroke="#FFE066" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="145" y1="185" x2="130" y2="185" stroke="#FFE066" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="255" y1="185" x2="270" y2="185" stroke="#FFE066" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="160" y1="145" x2="150" y2="135" stroke="#FFE066" stroke-width="2" stroke-linecap="round"/>
+    <line x1="240" y1="145" x2="250" y2="135" stroke="#FFE066" stroke-width="2" stroke-linecap="round"/>
+    <line x1="160" y1="225" x2="150" y2="235" stroke="#FFE066" stroke-width="2" stroke-linecap="round"/>
+    <line x1="240" y1="225" x2="250" y2="235" stroke="#FFE066" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Water -->
+  <rect x="4" y="248" width="392" height="148" fill="url(#water)" clip-path="url(#circle)"/>
+
+  <!-- Water shimmer lines -->
+  <g clip-path="url(#circle)" opacity="0.3">
+    <line x1="80" y1="265" x2="140" y2="265" stroke="#7fc3e8" stroke-width="1.5"/>
+    <line x1="200" y1="272" x2="300" y2="272" stroke="#7fc3e8" stroke-width="1.5"/>
+    <line x1="60" y1="285" x2="120" y2="285" stroke="#7fc3e8" stroke-width="1.5"/>
+    <line x1="160" y1="295" x2="240" y2="295" stroke="#7fc3e8" stroke-width="1.5"/>
+    <line x1="280" y1="288" x2="360" y2="288" stroke="#7fc3e8" stroke-width="1.5"/>
+  </g>
+
+  <!-- Golden Gate Bridge -->
+  <g clip-path="url(#circle)">
+    <!-- Road deck -->
+    <rect x="30" y="235" width="340" height="8" rx="2" fill="url(#bridge)"/>
+    <!-- Left tower -->
+    <rect x="95" y="170" width="14" height="75" rx="2" fill="#c0392b"/>
+    <rect x="91" y="168" width="22" height="6" rx="2" fill="#e74c3c"/>
+    <!-- Right tower -->
+    <rect x="291" y="170" width="14" height="75" rx="2" fill="#c0392b"/>
+    <rect x="287" y="168" width="22" height="6" rx="2" fill="#e74c3c"/>
+    <!-- Main cables -->
+    <path d="M30 235 Q102 195 200 230 Q298 195 370 235" fill="none" stroke="#c0392b" stroke-width="3"/>
+    <!-- Secondary cables (vertical hangers) -->
+    <g stroke="#c0392b" stroke-width="1.5" opacity="0.6">
+      <line x1="70" y1="230" x2="70" y2="238"/>
+      <line x1="88" y1="222" x2="88" y2="238"/>
+      <line x1="120" y1="215" x2="120" y2="238"/>
+      <line x1="145" y1="221" x2="145" y2="238"/>
+      <line x1="165" y1="228" x2="165" y2="238"/>
+      <line x1="200" y1="230" x2="200" y2="238"/>
+      <line x1="235" y1="228" x2="235" y2="238"/>
+      <line x1="255" y1="221" x2="255" y2="238"/>
+      <line x1="280" y1="215" x2="280" y2="238"/>
+      <line x1="312" y1="222" x2="312" y2="238"/>
+      <line x1="330" y1="230" x2="330" y2="238"/>
+    </g>
+  </g>
+
+  <!-- PayPal brand text -->
+  <text x="200" y="335" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFB84D" letter-spacing="2">PAYPAL</text>
+  <text x="200" y="355" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#A0A0B8" letter-spacing="1">GOLDEN GATE SUNRISE</text>
+
+  <!-- Outer glow ring -->
+  <circle cx="200" cy="200" r="196" fill="none" stroke="#FFB84D" stroke-width="2" opacity="0.4"/>
+  <circle cx="200" cy="200" r="192" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.2"/>
+</svg>

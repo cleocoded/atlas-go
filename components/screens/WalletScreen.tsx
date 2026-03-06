@@ -5,7 +5,8 @@ import { useAppStore }  from '@/store/appStore'
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
 import { YieldCounter } from '@/components/ui/YieldCounter'
 import { Button }       from '@/components/ui/Button'
-import { formatCurrency, formatCountdown, formatDate } from '@/types'
+import { formatCurrency, formatCountdown } from '@/types'
+import { CrossmintWidget } from '@/components/wallet/CrossmintWidget'
 
 function DepositWithdrawModal({
   mode,
@@ -61,6 +62,7 @@ export function WalletScreen() {
   const wallet   = useAppStore((s) => s.wallet)
   const activity = useAppStore((s) => s.activity)
   const navigate = useAppStore((s) => s.navigate)
+  const deposit  = useAppStore((s) => s.deposit)
   const { login } = usePrivy()
 
   const [modal, setModal] = useState<'deposit' | 'withdraw' | null>(null)
@@ -164,14 +166,12 @@ export function WalletScreen() {
           <p className="text-label text-text-secondary mb-3 uppercase tracking-wide text-body-sm">
             Buy stgUSDC
           </p>
-          {/* Crossmint widget renders here — needs NEXT_PUBLIC_CROSSMINT_CLIENT_ID */}
-          <div className="rounded-input bg-bg-elevated p-4 text-text-tertiary text-body-md text-center min-h-[120px] flex items-center justify-center">
-            <span>
-              {process.env.NEXT_PUBLIC_CROSSMINT_CLIENT_ID
-                ? 'Loading onramp…'
-                : 'Set NEXT_PUBLIC_CROSSMINT_CLIENT_ID to enable fiat onramp'}
-            </span>
-          </div>
+          <CrossmintWidget
+            recipientAddress={wallet.address}
+            onSuccess={(amount) => {
+              deposit(amount)
+            }}
+          />
         </div>
 
         {/* Connect wallet prompt */}

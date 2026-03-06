@@ -135,6 +135,7 @@ interface AppActions {
   withdraw: (amount: number) => void
   tickYield: () => void
   checkBoostExpiry: () => void
+  setBoostFromChain: (data: { balance: number; activeBoost: ActiveBoost | null; effectiveAPY: number }) => void
 
   // Profile
   setUsername: (name: string) => void
@@ -204,8 +205,21 @@ export const useAppStore = create<AppState & AppActions>()(
         now.getTime() + location.boostDurationHours * 3600 * 1000
       )
 
-      // Simulate gasless mint tx delay
-      await new Promise((r) => setTimeout(r, 2000))
+      // Call gasless relay API (handles on-chain mint when contracts are deployed;
+      // returns mock success in dev mode when contracts are not yet set up)
+      const walletAddress = state.wallet.address
+      if (walletAddress) {
+        const res = await fetch('/api/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ walletAddress, locationId }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error ?? 'Claim failed')
+      } else {
+        // No wallet connected — Privy will create one silently; delay for UX
+        await new Promise((r) => setTimeout(r, 2000))
+      }
 
       const newPOAP: CollectedPOAP = {
         id: `poap-${Date.now()}`,
@@ -358,6 +372,18 @@ export const useAppStore = create<AppState & AppActions>()(
         get().showToast('Your boost has expired. Explore for more!', 'info')
       }
     },
+
+    setBoostFromChain: ({ balance, activeBoost, effectiveAPY }) =>
+      set((s) => {
+        // Only update balance if meaningful change (avoid overriding optimistic UI mid-tx)
+        const diff = Math.abs(s.wallet.balance - balance)
+        if (diff > 0.01) s.wallet.balance = balance
+
+        s.wallet.activeBoost = activeBoost
+
+        // Recalculate yield rate from chain's effective APY
+        s.wallet.yieldRatePerSecond = (balance * (effectiveAPY / 100)) / 31536000
+      }),
 
     // ── Profile ─────────────────────────────────────────────────────────────
 
