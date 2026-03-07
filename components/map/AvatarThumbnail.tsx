@@ -9,8 +9,8 @@ export function AvatarThumbnail() {
   return (
     <button
       onClick={() => navigate('profile')}
-      className="fixed left-4 z-[10] w-24 h-24 flex items-center justify-center active:scale-95 transition-transform"
-      style={{ bottom: `calc(24px + env(safe-area-inset-bottom, 0px))` }}
+      className="fixed left-4 z-[10] w-24 h-24 flex items-end justify-center active:scale-95 transition-transform"
+      style={{ bottom: `calc(6px + env(safe-area-inset-bottom, 0px))` }}
       aria-label="Open profile"
     >
       {avatar === 'none' ? (
