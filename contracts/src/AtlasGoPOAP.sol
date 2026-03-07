@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
 
 /**
  * @title AtlasGoPOAP
@@ -14,9 +13,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
  *         One claim per (wallet, locationId) — enforced on-chain.
  */
 contract AtlasGoPOAP is ERC721URIStorage, Ownable {
-    using Counters for Counters.Counter;
-
-    Counters.Counter private _tokenIds;
+    uint256 private _nextTokenId;
 
     // Address authorized to call mint (Privy relayer / backend)
     address public minter;
@@ -83,8 +80,7 @@ contract AtlasGoPOAP is ERC721URIStorage, Ownable {
         // One claim per location per wallet
         require(claimRecord[locationId][claimer] == 0, "Already claimed this location");
 
-        _tokenIds.increment();
-        uint256 newTokenId = _tokenIds.current();
+        uint256 newTokenId = ++_nextTokenId;
 
         uint64 claimedAt  = uint64(block.timestamp);
         uint64 expiresAt  = claimedAt + uint64(boostDurationHours) * 3600;
@@ -118,6 +114,6 @@ contract AtlasGoPOAP is ERC721URIStorage, Ownable {
     }
 
     function totalSupply() external view returns (uint256) {
-        return _tokenIds.current();
+        return _nextTokenId;
     }
 }

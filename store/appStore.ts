@@ -21,7 +21,7 @@ const MOCK_LOCATIONS: Location[] = [
     partnerName: 'PayPal',
     partnerLogo: '/logos/paypal.svg',
     coordinates: { lat: 37.7749, lng: -122.4194 },
-    poapArtwork: '/poap/paypal-sf.png',
+    poapArtwork: '/poap/paypal-sf.svg',
     poapArtTitle: 'Golden Gate Sunrise',
     boostPercentage: 300,
     boostDurationHours: 72,
@@ -34,7 +34,7 @@ const MOCK_LOCATIONS: Location[] = [
     partnerName: 'Flow',
     partnerLogo: '/logos/flow.svg',
     coordinates: { lat: 37.7851, lng: -122.3985 },
-    poapArtwork: '/poap/flow-hq.png',
+    poapArtwork: '/poap/flow-hq.svg',
     poapArtTitle: 'Bay Bridge Blaze',
     boostPercentage: 450,
     boostDurationHours: 48,
@@ -47,7 +47,7 @@ const MOCK_LOCATIONS: Location[] = [
     partnerName: 'PayPal',
     partnerLogo: '/logos/paypal.svg',
     coordinates: { lat: 37.7879, lng: -122.4075 },
-    poapArtwork: '/poap/paypal-downtown.png',
+    poapArtwork: '/poap/paypal-downtown.svg',
     poapArtTitle: null,
     boostPercentage: 220,
     boostDurationHours: 24,
@@ -60,7 +60,7 @@ const MOCK_LOCATIONS: Location[] = [
     partnerName: 'Flow',
     partnerLogo: '/logos/flow.svg',
     coordinates: { lat: 37.7694, lng: -122.4862 },
-    poapArtwork: '/poap/flow-events.png',
+    poapArtwork: '/poap/flow-events.svg',
     poapArtTitle: 'Sunset District Badge',
     boostPercentage: 380,
     boostDurationHours: 96,
@@ -147,6 +147,9 @@ interface AppActions {
 
   // Activity
   addActivity: (item: Omit<ActivityItem, 'id' | 'timestamp'>) => void
+
+  // Locations
+  loadLocations: () => Promise<void>
 }
 
 // ── Store ─────────────────────────────────────────────────────────────────────
@@ -410,6 +413,19 @@ export const useAppStore = create<AppState & AppActions>()(
         })
         if (s.activity.length > 20) s.activity = s.activity.slice(0, 20)
       }),
+
+    // ── Locations ────────────────────────────────────────────────────────────
+
+    loadLocations: async () => {
+      try {
+        const res = await fetch('/api/locations')
+        if (!res.ok) return
+        const locations: Location[] = await res.json()
+        set((s) => { s.locations = locations })
+      } catch {
+        // Offline / API error — keep seed data
+      }
+    },
   }))
 )
 

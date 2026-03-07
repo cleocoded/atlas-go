@@ -1,3 +1,5 @@
+export const runtime = 'nodejs'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getProvider, getYieldContract, getStgUsdcContract } from '@/lib/flowEvm'
 import { ethers } from 'ethers'

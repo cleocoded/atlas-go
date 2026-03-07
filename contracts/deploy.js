@@ -1,5 +1,5 @@
 // Deploy AtlasGoPOAP and YieldBoost to Flow EVM
-// Run: DEPLOYER_PRIVATE_KEY=0x... npx hardhat run contracts/deploy.js --network flowTestnet
+// Run from contracts/: DEPLOYER_PRIVATE_KEY=0x... npx hardhat run deploy.js --network flowTestnet
 
 const hre = require("hardhat");
 

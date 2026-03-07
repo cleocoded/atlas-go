@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Image         from 'next/image'
 import { usePrivy }     from '@privy-io/react-auth'
 import { useAppStore }  from '@/store/appStore'
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
@@ -29,10 +30,18 @@ export function ProfileScreen() {
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         {/* Avatar */}
         <div className="flex justify-center py-8">
-          <div className="w-48 h-72 bg-bg-elevated rounded-card flex items-center justify-center border border-border-default shadow-elevated">
-            <span className="text-8xl">
-              {user.avatar === 'female' ? '👩' : user.avatar === 'male' ? '👨' : '🧭'}
-            </span>
+          <div className="w-48 h-72 bg-bg-elevated rounded-card overflow-hidden border border-border-default shadow-elevated flex items-center justify-center">
+            {user.avatar !== 'none' ? (
+              <Image
+                src={`/avatars/${user.avatar}.svg`}
+                alt={user.avatar}
+                width={192}
+                height={288}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-6xl opacity-40">🧭</span>
+            )}
           </div>
         </div>
 

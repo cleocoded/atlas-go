@@ -1,3 +1,5 @@
+export const runtime = 'nodejs'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getMinterSigner, getPoapContract, getYieldContract, locationIdToBytes32 } from '@/lib/flowEvm'
 import { getRarity } from '@/types'
