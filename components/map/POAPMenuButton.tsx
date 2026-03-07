@@ -3,7 +3,6 @@ import { useAppStore } from '@/store/appStore'
 import { Screen } from '@/types'
 
 const MENU_ITEMS: { label: string; icon: string; screen: Screen }[] = [
-  { label: 'Profile',    icon: '👤', screen: 'profile'    },
   { label: 'Collection', icon: '🏆', screen: 'collection' },
   { label: 'Wallet',     icon: '💰', screen: 'wallet'     },
   { label: 'Settings',   icon: '⚙️', screen: 'settings'   },
