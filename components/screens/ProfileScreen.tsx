@@ -33,7 +33,7 @@ export function ProfileScreen() {
           <div className="w-48 h-72 bg-bg-elevated rounded-card overflow-hidden border border-border-default shadow-elevated flex items-center justify-center">
             {user.avatar !== 'none' ? (
               <Image
-                src={`/avatars/${user.avatar}.svg`}
+                src={`/avatars/profile-${user.avatar}.png`}
                 alt={user.avatar}
                 width={192}
                 height={288}

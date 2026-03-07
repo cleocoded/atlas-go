@@ -53,7 +53,7 @@ export function AvatarSelectScreen() {
                   `}
                 >
                   <Image
-                    src={`/avatars/${opt.type}.svg`}
+                    src={`/avatars/profile-${opt.type}.png`}
                     alt={opt.label}
                     width={160}
                     height={256}

@@ -9,22 +9,20 @@ export function AvatarThumbnail() {
   return (
     <button
       onClick={() => navigate('profile')}
-      className="fixed left-4 z-[10] w-12 h-12 rounded-full overflow-hidden flex items-center justify-center active:scale-95 transition-transform border-2 border-accent-primary/40"
+      className="fixed left-4 z-[10] w-12 h-12 flex items-center justify-center active:scale-95 transition-transform"
       style={{ bottom: `calc(24px + env(safe-area-inset-bottom, 0px))` }}
       aria-label="Open profile"
     >
       {avatar === 'none' ? (
         <div className="w-full h-full rounded-full bg-text-disabled" />
       ) : (
-        <div className="w-full h-full rounded-full bg-bg-elevated overflow-hidden">
-          <Image
-            src={`/avatars/${avatar}.svg`}
-            alt={avatar}
-            width={48}
-            height={86}
-            className="w-full object-cover object-top"
-          />
-        </div>
+        <Image
+          src={`/avatars/thumbnail-${avatar}.png`}
+          alt={avatar}
+          width={48}
+          height={48}
+          className="w-full h-full object-contain"
+        />
       )}
     </button>
   )
