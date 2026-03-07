@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import type {
   AppState,
@@ -155,6 +156,7 @@ interface AppActions {
 // ── Store ─────────────────────────────────────────────────────────────────────
 
 export const useAppStore = create<AppState & AppActions>()(
+  persist(
   immer((set, get) => ({
     ...initialState,
 
@@ -426,7 +428,21 @@ export const useAppStore = create<AppState & AppActions>()(
         // Offline / API error — keep seed data
       }
     },
-  }))
+  })),
+  {
+    name: 'atlas-go-user',
+    partialize: (state) => ({
+      user: {
+        avatar: state.user.avatar,
+        username: state.user.username,
+      },
+    }),
+    merge: (persisted, current) => ({
+      ...current,
+      user: { ...(current as AppState).user, ...(persisted as any)?.user },
+    }),
+  },
+  )
 )
 
 // ── Selectors ─────────────────────────────────────────────────────────────────
