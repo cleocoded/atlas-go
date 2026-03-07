@@ -97,6 +97,44 @@ body {
   animation: particle-burst 600ms ease-out forwards;
 }
 
+/* Avatar sparkles */
+.sparkle-container {
+  position: absolute;
+  inset: -8px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, rgba(200, 180, 255, 0.8) 40%, transparent 70%);
+  box-shadow: 0 0 3px 1px rgba(200, 180, 255, 0.6);
+  animation: sparkle-float ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+@keyframes sparkle-float {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.3) translateY(0);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1) translateY(-2px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.8) translateY(-6px);
+  }
+  80% {
+    opacity: 0.3;
+    transform: scale(0.5) translateY(-10px);
+  }
+}
+
 /* Rarity glow helpers */
 .rarity-common    { border: 2px solid #A0A0B8; }
 .rarity-uncommon  { border: 2px solid #00E5A0; }
