@@ -3,9 +3,9 @@ import { useAppStore } from '@/store/appStore'
 import { Screen } from '@/types'
 
 const MENU_ITEMS: { label: string; icon: string; screen: Screen }[] = [
-  { label: 'Collection', icon: '🏆', screen: 'collection' },
-  { label: 'Wallet',     icon: '💰', screen: 'wallet'     },
-  { label: 'Settings',   icon: '⚙️', screen: 'settings'   },
+  { label: 'Collection', icon: '/icons/icon-collection.png', screen: 'collection' },
+  { label: 'Wallet',     icon: '/icons/icon-wallet.png',     screen: 'wallet'     },
+  { label: 'Settings',   icon: '/icons/icon-settings.png',   screen: 'settings'   },
 ]
 
 export function POAPMenuButton() {
@@ -43,18 +43,18 @@ export function POAPMenuButton() {
       {/* Menu items — stagger upward */}
       {menuOpen && (
         <div
-          className="fixed right-4 z-[10] flex flex-col-reverse gap-3"
-          style={{ bottom: `calc(24px + env(safe-area-inset-bottom, 0px) + 72px)` }}
+          className="fixed z-[10] flex flex-col-reverse gap-0 items-center"
+          style={{ bottom: `calc(24px + env(safe-area-inset-bottom, 0px) + 72px)`, right: '24px', width: '56px' }}
         >
           {MENU_ITEMS.map((item, i) => (
             <button
               key={item.screen}
               onClick={() => handleNavigate(item.screen)}
-              className="animate-menu-item-in bg-bg-card rounded-card px-3 py-2 flex flex-col items-center gap-1 shadow-elevated min-w-[56px] active:scale-95 transition-transform"
+              className="animate-menu-item-in bg-transparent rounded-card px-3 py-1 flex flex-col items-center gap-0 min-w-[56px] active:scale-95 transition-transform"
               style={{ animationDelay: `${i * 50}ms`, animationFillMode: 'both' }}
             >
-              <span className="text-xl leading-none">{item.icon}</span>
-              <span className="text-body-sm text-text-secondary font-medium">{item.label}</span>
+              <img src={item.icon} alt={item.label} className="w-12 h-12 object-contain" />
+              <span className="text-[10px] text-text-secondary font-bold uppercase">{item.label}</span>
             </button>
           ))}
         </div>
@@ -63,7 +63,7 @@ export function POAPMenuButton() {
       {/* Main button */}
       <button
         onClick={handleToggle}
-        className="fixed right-4 z-[10] w-14 h-14 rounded-full bg-accent-primary shadow-glow-gold flex items-center justify-center active:scale-[0.93] transition-all duration-[120ms] ease-out"
+        className="fixed right-6 z-[10] w-14 h-14 rounded-full bg-accent-primary shadow-glow-gold flex items-center justify-center active:scale-[0.93] transition-all duration-[120ms] ease-out"
         style={{ bottom: `calc(24px + env(safe-area-inset-bottom, 0px))` }}
         aria-label="Open menu"
       >
