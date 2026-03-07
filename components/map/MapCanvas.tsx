@@ -46,6 +46,7 @@ export function MapCanvas() {
   const mapRef          = useRef<mapboxgl.Map | null>(null)
   const markersRef      = useRef<Map<string, mapboxgl.Marker>>(new Map())
   const userMarkerRef   = useRef<mapboxgl.Marker | null>(null)
+  const userAvatarRef   = useRef<string | null>(null)
 
   const locations       = useAppStore((s) => s.locations)
   const currentPosition = useAppStore((s) => s.currentPosition)
@@ -154,25 +155,40 @@ export function MapCanvas() {
 
     const { lat, lng } = currentPosition
 
+    // Recreate marker if avatar changed
+    if (userMarkerRef.current && userAvatarRef.current !== avatar) {
+      userMarkerRef.current.remove()
+      userMarkerRef.current = null
+    }
+
     if (userMarkerRef.current) {
       userMarkerRef.current.setLngLat([lng, lat])
     } else {
+      userAvatarRef.current = avatar
       const el = document.createElement('div')
-      el.style.cssText = `
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: #FFB84D;
-        border: 3px solid #FFFFFF;
-        box-shadow: 0 0 16px rgba(255,184,77,0.5);
-        cursor: default;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      `
-      // Show avatar initials / icon
-      el.innerHTML = `<span style="font-size:22px;">${avatar === 'female' ? '👩' : avatar === 'male' ? '👨' : '🧭'}</span>`
+      if (avatar === 'male' || avatar === 'female') {
+        const img = document.createElement('img')
+        img.src = `/avatars/position-${avatar}.png`
+        img.alt = avatar
+        img.style.cssText = `width: 64px; height: 64px; object-fit: contain; pointer-events: none;`
+        el.style.cssText = `width: 64px; height: 64px; cursor: default;`
+        el.appendChild(img)
+      } else {
+        el.style.cssText = `
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background: #FFB84D;
+          border: 3px solid #FFFFFF;
+          box-shadow: 0 0 16px rgba(255,184,77,0.5);
+          cursor: default;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        `
+        el.innerHTML = `<span style="font-size:22px;">🧭</span>`
+      }
 
       // Proximity pulse ring
       const pulse = document.createElement('div')
