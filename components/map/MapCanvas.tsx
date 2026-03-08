@@ -95,9 +95,16 @@ export function MapCanvas() {
       style: DARK_STYLE,
       center: [103.8580, 1.3012], // Haji Lane, Singapore
       zoom: 15,
-      minZoom: 15,
+      minZoom: 13,
       attributionControl: false,
       logoPosition: 'bottom-right',
+    })
+
+    // Soft zoom-out limit: ease back to 15 if user zooms out past it
+    map.on('zoomend', () => {
+      if (map.getZoom() < 15) {
+        map.easeTo({ zoom: 15, duration: 300 })
+      }
     })
 
     mapRef.current = map
@@ -177,7 +184,58 @@ export function MapCanvas() {
     }
   }, [locations, currentPosition, claimedIds, openClaim, showToast])
 
-  // Update user position marker
+  // Geo-accurate range circle (scales with map zoom)
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !currentPosition) return
+
+    const RANGE_METERS = 500
+    const point = [currentPosition.lng, currentPosition.lat] as [number, number]
+
+    // Generate a GeoJSON circle polygon from center + radius in meters
+    const toCircleGeoJSON = (center: [number, number], meters: number, steps = 64) => {
+      const coords: [number, number][] = []
+      const km = meters / 1000
+      for (let i = 0; i <= steps; i++) {
+        const angle = (i / steps) * 2 * Math.PI
+        const dx = km / (111.32 * Math.cos((center[1] * Math.PI) / 180))
+        const dy = km / 110.574
+        coords.push([center[0] + dx * Math.cos(angle), center[1] + dy * Math.sin(angle)])
+      }
+      return { type: 'Feature' as const, geometry: { type: 'Polygon' as const, coordinates: [coords] }, properties: {} }
+    }
+
+    const geoJSON = toCircleGeoJSON(point, RANGE_METERS)
+
+    const addOrUpdate = () => {
+      const source = map.getSource('user-range') as mapboxgl.GeoJSONSource | undefined
+      if (source) {
+        source.setData(geoJSON as any)
+      } else {
+        map.addSource('user-range', { type: 'geojson', data: geoJSON as any })
+        map.addLayer({
+          id: 'user-range-fill',
+          type: 'fill',
+          source: 'user-range',
+          paint: { 'fill-color': '#FFB84D', 'fill-opacity': 0.08 },
+        })
+        map.addLayer({
+          id: 'user-range-border',
+          type: 'line',
+          source: 'user-range',
+          paint: { 'line-color': '#FFB84D', 'line-opacity': 0.25, 'line-width': 1.5 },
+        })
+      }
+    }
+
+    if (map.isStyleLoaded()) {
+      addOrUpdate()
+    } else {
+      map.once('load', addOrUpdate)
+    }
+  }, [currentPosition])
+
+  // Update user position marker (avatar only, no CSS pulse)
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
@@ -189,10 +247,14 @@ export function MapCanvas() {
 
     const { lat, lng } = currentPosition
 
-    // Recreate marker if avatar changed
-    if (userMarkerRef.current && userAvatarRef.current !== avatar) {
-      userMarkerRef.current.remove()
-      userMarkerRef.current = null
+    // Recreate marker if avatar changed or marker got detached
+    if (userMarkerRef.current) {
+      const markerOnMap = userMarkerRef.current.getLngLat()
+      const detached = !markerOnMap
+      if (detached || userAvatarRef.current !== avatar) {
+        userMarkerRef.current.remove()
+        userMarkerRef.current = null
+      }
     }
 
     if (userMarkerRef.current) {
@@ -201,39 +263,11 @@ export function MapCanvas() {
       userAvatarRef.current = avatar
       const avatarSize = (avatar === 'male' || avatar === 'female') ? 64 : 48
 
-      const wrapper = document.createElement('div')
-      wrapper.style.cssText = `
-        position: relative;
-        width: ${avatarSize}px;
-        height: ${avatarSize}px;
-      `
-
-      // Proximity pulse ring
-      const pulse = document.createElement('div')
-      pulse.style.cssText = `
-        position: absolute;
-        width: 200px;
-        height: 200px;
-        border-radius: 50%;
-        background: rgba(255,184,77,0.15);
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        animation: proximity-pulse 2s ease-out infinite;
-        pointer-events: none;
-      `
-      wrapper.appendChild(pulse)
-
-      // Avatar element (absolutely positioned to center on wrapper)
       const el = document.createElement('div')
       el.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
         width: ${avatarSize}px;
         height: ${avatarSize}px;
         cursor: default;
-        z-index: 1;
       `
       if (avatar === 'male' || avatar === 'female') {
         const img = document.createElement('img')
@@ -254,9 +288,8 @@ export function MapCanvas() {
         `
         el.innerHTML = `<span style="font-size:22px;">🧭</span>`
       }
-      wrapper.appendChild(el)
 
-      const marker = new mapboxgl.Marker({ element: wrapper, anchor: 'center' })
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
         .setLngLat([lng, lat])
         .addTo(map)
 
@@ -264,6 +297,11 @@ export function MapCanvas() {
 
       // Pan to user on first fix
       map.flyTo({ center: [lng, lat], zoom: 15, duration: 1000 })
+    }
+
+    // Cleanup: remove marker if this effect re-runs from scratch
+    return () => {
+      // Don't remove on every position update — only on unmount
     }
   }, [currentPosition, avatar])
 
