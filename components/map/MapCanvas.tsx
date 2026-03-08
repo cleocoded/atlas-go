@@ -65,8 +65,8 @@ export function MapCanvas() {
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: DARK_STYLE,
-      center: [-122.4194, 37.7749], // San Francisco default
-      zoom: 13,
+      center: [103.8580, 1.3012], // Haji Lane, Singapore
+      zoom: 15,
       attributionControl: false,
       logoPosition: 'bottom-right',
     })
@@ -165,30 +165,14 @@ export function MapCanvas() {
       userMarkerRef.current.setLngLat([lng, lat])
     } else {
       userAvatarRef.current = avatar
-      const el = document.createElement('div')
-      if (avatar === 'male' || avatar === 'female') {
-        const img = document.createElement('img')
-        img.src = `/avatars/position-${avatar}.png`
-        img.alt = avatar
-        img.style.cssText = `width: 64px; height: 64px; object-fit: contain; pointer-events: none;`
-        el.style.cssText = `width: 64px; height: 64px; cursor: default;`
-        el.appendChild(img)
-      } else {
-        el.style.cssText = `
-          width: 48px;
-          height: 48px;
-          border-radius: 50%;
-          background: #FFB84D;
-          border: 3px solid #FFFFFF;
-          box-shadow: 0 0 16px rgba(255,184,77,0.5);
-          cursor: default;
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        `
-        el.innerHTML = `<span style="font-size:22px;">🧭</span>`
-      }
+      const avatarSize = (avatar === 'male' || avatar === 'female') ? 64 : 48
+
+      const wrapper = document.createElement('div')
+      wrapper.style.cssText = `
+        position: relative;
+        width: ${avatarSize}px;
+        height: ${avatarSize}px;
+      `
 
       // Proximity pulse ring
       const pulse = document.createElement('div')
@@ -200,14 +184,42 @@ export function MapCanvas() {
         background: rgba(255,184,77,0.15);
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%) scale(0.5);
+        transform: translate(-50%, -50%);
         animation: proximity-pulse 2s ease-out infinite;
         pointer-events: none;
       `
-
-      const wrapper = document.createElement('div')
-      wrapper.style.cssText = 'position:relative;'
       wrapper.appendChild(pulse)
+
+      // Avatar element (absolutely positioned to center on wrapper)
+      const el = document.createElement('div')
+      el.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: ${avatarSize}px;
+        height: ${avatarSize}px;
+        cursor: default;
+        z-index: 1;
+      `
+      if (avatar === 'male' || avatar === 'female') {
+        const img = document.createElement('img')
+        img.src = `/avatars/position-${avatar}.png`
+        img.alt = avatar
+        img.style.cssText = `width: 100%; height: 100%; object-fit: contain; pointer-events: none;`
+        el.appendChild(img)
+      } else {
+        el.style.cssText += `
+          border-radius: 50%;
+          background: #FFB84D;
+          border: 3px solid #FFFFFF;
+          box-shadow: 0 0 16px rgba(255,184,77,0.5);
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        `
+        el.innerHTML = `<span style="font-size:22px;">🧭</span>`
+      }
       wrapper.appendChild(el)
 
       const marker = new mapboxgl.Marker({ element: wrapper, anchor: 'center' })

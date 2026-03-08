@@ -21,18 +21,30 @@ export function MapScreen() {
     if (!navigator.geolocation) return
 
     const success = (pos: GeolocationPosition) => {
+      console.log('[GPS] Position fix:', pos.coords.latitude.toFixed(5), pos.coords.longitude.toFixed(5), 'accuracy:', pos.coords.accuracy, 'm')
       setGpsEnabled(true)
       setCurrentPos({ lat: pos.coords.latitude, lng: pos.coords.longitude })
     }
 
-    const error = () => {
-      setGpsEnabled(false)
+    let failCount = 0
+    const error = (err: GeolocationPositionError) => {
+      const reasons: Record<number, string> = { 1: 'PERMISSION_DENIED', 2: 'POSITION_UNAVAILABLE', 3: 'TIMEOUT' }
+      console.warn('[GPS] Error:', reasons[err.code] || err.code, err.message)
+      failCount++
+      // After 2 failures, use fallback position for demo (Haji Lane area)
+      if (failCount >= 2 && err.code !== 1) {
+        console.log('[GPS] Using fallback position for demo')
+        setGpsEnabled(true)
+        setCurrentPos({ lat: 1.3010, lng: 103.8585 })
+      } else {
+        setGpsEnabled(false)
+      }
     }
 
     const options: PositionOptions = {
       enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 5000,
+      timeout: 30000,
+      maximumAge: 10000,
     }
 
     // Get initial position immediately

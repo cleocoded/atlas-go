@@ -75,7 +75,14 @@ export async function GET(req: NextRequest) {
       effectiveAPY,
     })
   } catch (err) {
-    console.error('[balance] Error:', err)
-    return NextResponse.json({ error: 'Failed to fetch balance' }, { status: 500 })
+    console.warn('[balance] Contract call failed, returning mock data:', (err as Error).message)
+    return NextResponse.json({
+      depositBalance: 0,
+      stgUsdcWallet: 0,
+      activeBoost: null,
+      isBoostActive: false,
+      effectiveAPY: 3,
+      mock: true,
+    })
   }
 }
