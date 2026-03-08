@@ -18,9 +18,9 @@ import { OnboardingScreen }  from '@/components/screens/OnboardingScreen'
 // ── AppWithPrivy ─────────────────────────────────────────────────────────────
 // Only rendered once PrivyProvider is in the tree — safe to call usePrivy()
 
-function AppWithPrivy({ onEmail }: { onEmail: (email: string | null) => void }) {
+function AppWithPrivy({ onAuth }: { onAuth: (info: { authenticated: boolean; email: string | null; login: () => void }) => void }) {
   const connectWallet = useAppStore((s) => s.connectWallet)
-  const { user: privyUser, authenticated } = usePrivy()
+  const { user: privyUser, authenticated, login } = usePrivy()
 
   useEffect(() => {
     if (authenticated && privyUser?.wallet?.address) {
@@ -28,11 +28,10 @@ function AppWithPrivy({ onEmail }: { onEmail: (email: string | null) => void }) 
     }
   }, [authenticated, privyUser, connectWallet])
 
-  // Forward email for onboarding default name
   useEffect(() => {
     const email = privyUser?.email?.address ?? privyUser?.google?.email ?? null
-    onEmail(email)
-  }, [privyUser, onEmail])
+    onAuth({ authenticated, email, login })
+  }, [privyUser, authenticated, onAuth, login])
 
   useOnChainSync()
 
@@ -46,8 +45,8 @@ export function App() {
   const hasOnboarded    = useAppStore((s) => s.hasOnboarded)
   const privyReady      = usePrivyReady()
   const loadLocations   = useAppStore((s) => s.loadLocations)
-  const [email, setEmail] = useState<string | null>(null)
-  const handleEmail = useCallback((e: string | null) => setEmail(e), [])
+  const [authInfo, setAuthInfo] = useState<{ authenticated: boolean; email: string | null; login: () => void }>({ authenticated: false, email: null, login: () => {} })
+  const handleAuth = useCallback((info: { authenticated: boolean; email: string | null; login: () => void }) => setAuthInfo(info), [])
 
   useEffect(() => { loadLocations() }, [loadLocations])
 
@@ -57,30 +56,29 @@ export function App() {
       style={{ height: '100dvh', maxWidth: '480px', margin: '0 auto' }}
     >
       {/* Mount Privy-dependent logic only once PrivyProvider is in the tree */}
-      {privyReady && <AppWithPrivy onEmail={handleEmail} />}
+      {privyReady && <AppWithPrivy onAuth={handleAuth} />}
 
-      {!hasOnboarded ? (
-        <OnboardingScreen email={email} />
-      ) : (
-        <>
-          {/* Map always rendered underneath — persists GPS + tiles across screens */}
-          <div
-            className="absolute inset-0"
-            style={{ display: screen === 'map' || screen === 'claim' ? 'block' : 'none' }}
-          >
-            <MapScreen />
-          </div>
+      {/* Map always rendered underneath — persists GPS + tiles across screens */}
+      <div
+        className="absolute inset-0"
+        style={{ display: screen === 'map' || screen === 'claim' || !hasOnboarded ? 'block' : 'none' }}
+      >
+        <MapScreen />
+      </div>
 
-          {/* Full-screen overlay / navigation screens */}
-          {screen === 'claim'         && <ClaimScreen />}
-          {screen === 'collection'    && <CollectionScreen />}
-          {screen === 'poap-detail'   && <POAPDetailScreen />}
-          {screen === 'wallet'        && <WalletScreen />}
-          {screen === 'profile'       && <ProfileScreen />}
-          {screen === 'avatar-select' && <AvatarSelectScreen />}
-          {screen === 'settings'      && <SettingsScreen />}
-        </>
+      {/* Onboarding overlay — only after Privy login, before profile setup */}
+      {authInfo.authenticated && !hasOnboarded && (
+        <OnboardingScreen email={authInfo.email} />
       )}
+
+      {/* Full-screen overlay / navigation screens */}
+      {hasOnboarded && screen === 'claim'         && <ClaimScreen />}
+      {hasOnboarded && screen === 'collection'    && <CollectionScreen />}
+      {hasOnboarded && screen === 'poap-detail'   && <POAPDetailScreen />}
+      {hasOnboarded && screen === 'wallet'        && <WalletScreen />}
+      {hasOnboarded && screen === 'profile'       && <ProfileScreen />}
+      {hasOnboarded && screen === 'avatar-select' && <AvatarSelectScreen />}
+      {hasOnboarded && screen === 'settings'      && <SettingsScreen />}
 
       <Toast />
     </main>

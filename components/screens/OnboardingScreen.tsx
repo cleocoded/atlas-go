@@ -15,14 +15,17 @@ function getDefaultName(email?: string | null): string {
   return email.split('@')[0].replace(/[._+]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
-/** Onboarding shown once on first visit — avatar + name setup */
-export function OnboardingScreen({ email }: { email?: string | null }) {
+interface Props {
+  email?: string | null
+}
+
+export function OnboardingScreen({ email }: Props) {
   const completeOnboarding = useAppStore((s) => s.completeOnboarding)
 
   const [selectedAvatar, setSelectedAvatar] = useState<AvatarType>('female')
   const [username, setUsername] = useState(() => getDefaultName(email))
 
-  // Update default name if email arrives later (after Privy login)
+  // Update default name if email arrives after login
   useEffect(() => {
     if (email && !username) {
       setUsername(getDefaultName(email))
@@ -35,12 +38,11 @@ export function OnboardingScreen({ email }: { email?: string | null }) {
   }
 
   return (
-    <div className="absolute inset-0 flex flex-col bg-bg-primary overflow-auto">
+    <div className="absolute inset-0 z-10 flex flex-col bg-bg-primary/95 backdrop-blur-sm overflow-auto">
       <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 py-8">
         <div className="text-center">
-          <span className="text-5xl block mb-4">✦</span>
           <h2 className="text-heading-md font-bold text-text-primary font-nunito">
-            Welcome to Atlas Go
+            Set up your profile
           </h2>
           <p className="text-body-sm text-text-secondary mt-2">
             Choose your explorer and pick a name
@@ -109,7 +111,7 @@ export function OnboardingScreen({ email }: { email?: string | null }) {
         </div>
       </div>
 
-      <div className="shrink-0 px-4 pb-8" style={{ paddingBottom: `max(32px, calc(32px + env(safe-area-inset-bottom, 0px)))` }}>
+      <div className="shrink-0 px-4" style={{ paddingBottom: `max(32px, calc(32px + env(safe-area-inset-bottom, 0px)))` }}>
         <Button variant="primary" fullWidth size="lg" onClick={handleComplete}>
           Start Exploring
         </Button>
