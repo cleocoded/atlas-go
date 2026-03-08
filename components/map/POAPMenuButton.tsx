@@ -1,5 +1,6 @@
 'use client'
 import { useAppStore } from '@/store/appStore'
+import { privyLoginRef } from '@/components/App'
 import { Screen } from '@/types'
 
 const MENU_ITEMS: { label: string; icon: string; screen: Screen }[] = [
@@ -9,14 +10,19 @@ const MENU_ITEMS: { label: string; icon: string; screen: Screen }[] = [
 ]
 
 export function POAPMenuButton() {
-  const menuOpen = useAppStore((s) => s.menuOpen)
-  const toggleMenu = useAppStore((s) => s.toggleMenu)
-  const closeMenu  = useAppStore((s) => s.closeMenu)
-  const navigate   = useAppStore((s) => s.navigate)
+  const menuOpen     = useAppStore((s) => s.menuOpen)
+  const toggleMenu   = useAppStore((s) => s.toggleMenu)
+  const closeMenu    = useAppStore((s) => s.closeMenu)
+  const navigate     = useAppStore((s) => s.navigate)
+  const hasOnboarded = useAppStore((s) => s.hasOnboarded)
 
   const handleNavigate = (screen: Screen) => {
     closeMenu()
-    navigate(screen)
+    if (!hasOnboarded) {
+      privyLoginRef.current?.()
+    } else {
+      navigate(screen)
+    }
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       navigator.vibrate(15)
     }
