@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { Location, MarkerState, haversineDistance } from '@/types'
@@ -56,6 +56,33 @@ export function MapCanvas() {
   const showToast       = useAppStore((s) => s.showToast)
   const claimedIds      = useAppStore(selectClaimedLocationIds)
   const gpsEnabled      = useAppStore((s) => s.gpsEnabled)
+  const [userOffScreen, setUserOffScreen] = useState(false)
+
+  // Check if user marker is visible in viewport
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !currentPosition) {
+      setUserOffScreen(false)
+      return
+    }
+
+    const checkVisibility = () => {
+      const bounds = map.getBounds()
+      if (!bounds) return
+      const inView = bounds.contains([currentPosition.lng, currentPosition.lat])
+      setUserOffScreen(!inView)
+    }
+
+    checkVisibility()
+    map.on('moveend', checkVisibility)
+    return () => { map.off('moveend', checkVisibility) }
+  }, [currentPosition])
+
+  const recenterOnUser = useCallback(() => {
+    const map = mapRef.current
+    if (!map || !currentPosition) return
+    map.flyTo({ center: [currentPosition.lng, currentPosition.lat], zoom: 15, duration: 800 })
+  }, [currentPosition])
 
   // Initialize map
   useEffect(() => {
@@ -241,10 +268,29 @@ export function MapCanvas() {
   }, [currentPosition, avatar])
 
   return (
-    <div
-      ref={mapContainerRef}
-      className="absolute inset-0 w-full h-full"
-      style={{ zIndex: 0 }}
-    />
+    <>
+      <div
+        ref={mapContainerRef}
+        className="absolute inset-0 w-full h-full"
+        style={{ zIndex: 0 }}
+      />
+      {userOffScreen && (
+        <button
+          onClick={recenterOnUser}
+          className="fixed z-[10] flex items-center gap-2 px-4 py-2 rounded-full bg-bg-secondary/90 backdrop-blur-sm border border-border-subtle shadow-lg transition-all active:scale-95"
+          style={{ bottom: 'calc(100px + env(safe-area-inset-bottom, 0px))', left: '50%', transform: 'translateX(-50%)' }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent-primary">
+            <circle cx="12" cy="12" r="10" />
+            <circle cx="12" cy="12" r="3" />
+            <line x1="12" y1="2" x2="12" y2="6" />
+            <line x1="12" y1="18" x2="12" y2="22" />
+            <line x1="2" y1="12" x2="6" y2="12" />
+            <line x1="18" y1="12" x2="22" y2="12" />
+          </svg>
+          <span className="text-text-primary text-sm font-semibold font-nunito">Re-center</span>
+        </button>
+      )}
+    </>
   )
 }
