@@ -235,23 +235,53 @@ export function MapCanvas() {
     }
   }, [currentPosition])
 
-  // Update user position marker (avatar only, no CSS pulse)
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map) return
-    if (!currentPosition) {
-      userMarkerRef.current?.remove()
-      userMarkerRef.current = null
-      return
+  // Helper: create and add user marker to map
+  const addUserMarker = useCallback((map: mapboxgl.Map, lat: number, lng: number) => {
+    const av = userAvatarRef.current ?? 'none'
+    const avatarSize = (av === 'male' || av === 'female') ? 64 : 48
+
+    const el = document.createElement('div')
+    el.style.cssText = `
+      width: ${avatarSize}px;
+      height: ${avatarSize}px;
+      cursor: default;
+    `
+    if (av === 'male' || av === 'female') {
+      const img = document.createElement('img')
+      img.src = `/avatars/position-${av}.png`
+      img.alt = av
+      img.style.cssText = `width: 100%; height: 100%; object-fit: contain; pointer-events: none;`
+      el.appendChild(img)
+    } else {
+      el.style.cssText += `
+        border-radius: 50%;
+        background: #FFB84D;
+        border: 3px solid #FFFFFF;
+        box-shadow: 0 0 16px rgba(255,184,77,0.5);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      `
+      el.innerHTML = `<span style="font-size:22px;">🧭</span>`
     }
 
-    const { lat, lng } = currentPosition
+    const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+      .setLngLat([lng, lat])
+      .addTo(map)
 
-    // Recreate marker if avatar changed or marker got detached
+    userMarkerRef.current = marker
+    console.log('[UserMarker] Added to map at', lat, lng, 'avatar:', av)
+  }, [])
+
+  // Ensure user marker is alive — checks DOM attachment, recreates if needed
+  const ensureUserMarker = useCallback((map: mapboxgl.Map, lat: number, lng: number) => {
     if (userMarkerRef.current) {
-      const markerOnMap = userMarkerRef.current.getLngLat()
-      const detached = !markerOnMap
-      if (detached || userAvatarRef.current !== avatar) {
+      const el = userMarkerRef.current.getElement()
+      const detached = !el.parentElement || !el.isConnected
+      const avatarChanged = userAvatarRef.current !== avatar
+      if (detached || avatarChanged) {
+        console.log('[UserMarker] Recovering — detached:', detached, 'avatarChanged:', avatarChanged)
         userMarkerRef.current.remove()
         userMarkerRef.current = null
       }
@@ -261,49 +291,66 @@ export function MapCanvas() {
       userMarkerRef.current.setLngLat([lng, lat])
     } else {
       userAvatarRef.current = avatar
-      const avatarSize = (avatar === 'male' || avatar === 'female') ? 64 : 48
+      addUserMarker(map, lat, lng)
+    }
+  }, [avatar, addUserMarker])
 
-      const el = document.createElement('div')
-      el.style.cssText = `
-        width: ${avatarSize}px;
-        height: ${avatarSize}px;
-        cursor: default;
-      `
-      if (avatar === 'male' || avatar === 'female') {
-        const img = document.createElement('img')
-        img.src = `/avatars/position-${avatar}.png`
-        img.alt = avatar
-        img.style.cssText = `width: 100%; height: 100%; object-fit: contain; pointer-events: none;`
-        el.appendChild(img)
-      } else {
-        el.style.cssText += `
-          border-radius: 50%;
-          background: #FFB84D;
-          border: 3px solid #FFFFFF;
-          box-shadow: 0 0 16px rgba(255,184,77,0.5);
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        `
-        el.innerHTML = `<span style="font-size:22px;">🧭</span>`
-      }
+  // Update user position marker (avatar only, no CSS pulse)
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    if (!currentPosition) {
+      console.log('[UserMarker] No position, removing marker')
+      userMarkerRef.current?.remove()
+      userMarkerRef.current = null
+      return
+    }
 
-      const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
-        .setLngLat([lng, lat])
-        .addTo(map)
+    const { lat, lng } = currentPosition
+    const isFirstCreate = !userMarkerRef.current
 
-      userMarkerRef.current = marker
+    ensureUserMarker(map, lat, lng)
 
-      // Pan to user on first fix
+    // Pan to user on first fix
+    if (isFirstCreate && userMarkerRef.current) {
       map.flyTo({ center: [lng, lat], zoom: 15, duration: 1000 })
     }
 
-    // Cleanup: remove marker if this effect re-runs from scratch
-    return () => {
-      // Don't remove on every position update — only on unmount
+    // Periodic health check — detect detachment between GPS updates
+    const interval = setInterval(() => {
+      if (userMarkerRef.current) {
+        const el = userMarkerRef.current.getElement()
+        if (!el.parentElement || !el.isConnected) {
+          console.log('[UserMarker] Health check: marker detached, recovering')
+          userMarkerRef.current.remove()
+          userMarkerRef.current = null
+          const pos = useAppStore.getState().currentPosition
+          if (pos) {
+            userAvatarRef.current = useAppStore.getState().user.avatar
+            addUserMarker(map, pos.lat, pos.lng)
+          }
+        }
+      }
+    }, 2000)
+
+    // Also recover after Mapbox style reload (can wipe DOM markers)
+    const onStyleLoad = () => {
+      console.log('[UserMarker] Style reloaded, recovering marker')
+      userMarkerRef.current?.remove()
+      userMarkerRef.current = null
+      const pos = useAppStore.getState().currentPosition
+      if (pos) {
+        userAvatarRef.current = useAppStore.getState().user.avatar
+        addUserMarker(map, pos.lat, pos.lng)
+      }
     }
-  }, [currentPosition, avatar])
+    map.on('style.load', onStyleLoad)
+
+    return () => {
+      clearInterval(interval)
+      map.off('style.load', onStyleLoad)
+    }
+  }, [currentPosition, avatar, ensureUserMarker, addUserMarker])
 
   return (
     <>
