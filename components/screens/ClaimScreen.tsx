@@ -31,6 +31,7 @@ export function ClaimScreen() {
     return () => window.removeEventListener('keydown', handler)
   }, [claimState, closeClaim])
 
+  console.log('[ClaimScreen] locationId:', locationId, 'location found:', !!location, 'locations count:', locations.length)
   if (!location) return null
 
   const handleClaimTap = () => {

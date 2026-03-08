@@ -191,12 +191,15 @@ export const useAppStore = create<AppState & AppActions>()(
 
     // ── Claim flow ──────────────────────────────────────────────────────────
 
-    openClaim: (locationId) =>
+    openClaim: (locationId) => {
+      console.log('[Store] openClaim called with:', locationId, 'hasOnboarded:', get().hasOnboarded, 'screen before:', get().currentScreen)
       set((s) => {
         s.activeClaimLocationId = locationId
         s.currentScreen = 'claim'
         s.menuOpen = false
-      }),
+      })
+      console.log('[Store] openClaim done, screen now:', get().currentScreen)
+    },
 
     closeClaim: () =>
       set((s) => {

@@ -154,11 +154,13 @@ export function MapCanvas() {
 
           el.addEventListener('click', () => {
             const currentState = markerStateRef.current.get(location.id)
-            console.log('[Marker] Clicked', location.name, 'state:', currentState)
+            console.log('[Marker] Clicked', location.name, 'state:', currentState, 'id:', location.id)
+            const store = useAppStore.getState()
             if (currentState === 'in-range') {
-              openClaim(location.id)
+              console.log('[Marker] Opening claim for', location.id, 'location exists in store:', !!store.locations.find(l => l.id === location.id))
+              store.openClaim(location.id)
             } else if (currentState === 'claimed') {
-              showToast('Already claimed this location!', 'info')
+              store.showToast('Already claimed this location!', 'info')
             } else {
               mapRef.current?.flyTo({
                 center: [location.coordinates.lng, location.coordinates.lat],

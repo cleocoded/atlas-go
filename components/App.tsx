@@ -56,11 +56,8 @@ export function App() {
   const screen          = useAppStore((s) => s.currentScreen)
   const hasOnboarded    = useAppStore((s) => s.hasOnboarded)
   const privyReady      = usePrivyReady()
-  const loadLocations   = useAppStore((s) => s.loadLocations)
   const [authInfo, setAuthInfo] = useState<{ authenticated: boolean; email: string | null; login: () => void }>({ authenticated: false, email: null, login: () => {} })
   const handleAuth = useCallback((info: { authenticated: boolean; email: string | null; login: () => void }) => setAuthInfo(info), [])
-
-  useEffect(() => { loadLocations() }, [loadLocations])
 
   return (
     <main
