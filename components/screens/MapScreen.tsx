@@ -13,8 +13,10 @@ export function MapScreen() {
   const setCurrentPos   = useAppStore((s) => s.setCurrentPosition)
   const tickYield       = useAppStore((s) => s.tickYield)
   const checkBoostExpiry = useAppStore((s) => s.checkBoostExpiry)
+  const loadLocations   = useAppStore((s) => s.loadLocations)
   const intervalRef     = useRef<ReturnType<typeof setInterval> | null>(null)
   const geoWatchRef     = useRef<number | null>(null)
+  const hasReloadedLocationsRef = useRef(false)
 
   // Start GPS polling
   useEffect(() => {
@@ -24,6 +26,12 @@ export function MapScreen() {
       console.log('[GPS] Position fix:', pos.coords.latitude.toFixed(5), pos.coords.longitude.toFixed(5), 'accuracy:', pos.coords.accuracy, 'm')
       setGpsEnabled(true)
       setCurrentPos({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+      // Reload locations once with GPS position so nearby POAPs are generated
+      if (!hasReloadedLocationsRef.current) {
+        hasReloadedLocationsRef.current = true
+        // Small delay to ensure position is in store before fetch
+        setTimeout(() => loadLocations(), 100)
+      }
     }
 
     let failCount = 0
@@ -58,7 +66,7 @@ export function MapScreen() {
         navigator.geolocation.clearWatch(geoWatchRef.current)
       }
     }
-  }, [setGpsEnabled, setCurrentPos])
+  }, [setGpsEnabled, setCurrentPos, loadLocations])
 
   // Yield tick every 100ms
   useEffect(() => {

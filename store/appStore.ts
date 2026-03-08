@@ -432,7 +432,9 @@ export const useAppStore = create<AppState & AppActions>()(
 
     loadLocations: async () => {
       try {
-        const res = await fetch('/api/locations')
+        const pos = get().currentPosition
+        const params = pos ? `?lat=${pos.lat}&lng=${pos.lng}` : ''
+        const res = await fetch(`/api/locations${params}`)
         if (!res.ok) return
         const locations: Location[] = await res.json()
         set((s) => { s.locations = locations })
