@@ -68,6 +68,7 @@ export function MapCanvas() {
       style: DARK_STYLE,
       center: [103.8580, 1.3012], // Haji Lane, Singapore
       zoom: 15,
+      minZoom: 15,
       attributionControl: false,
       logoPosition: 'bottom-right',
     })
