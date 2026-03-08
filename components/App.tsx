@@ -15,15 +15,16 @@ import { AvatarSelectScreen } from '@/components/screens/AvatarSelectScreen'
 import { SettingsScreen }    from '@/components/screens/SettingsScreen'
 import { OnboardingScreen }  from '@/components/screens/OnboardingScreen'
 
-// Shared login ref so components outside Privy tree can trigger sign-in
+// Shared refs so components outside Privy tree can trigger sign-in/out
 export const privyLoginRef: { current: (() => void) | null } = { current: null }
+export const privyLogoutRef: { current: (() => Promise<void>) | null } = { current: null }
 
 // ── AppWithPrivy ─────────────────────────────────────────────────────────────
 // Only rendered once PrivyProvider is in the tree — safe to call usePrivy()
 
 function AppWithPrivy({ onAuth }: { onAuth: (info: { authenticated: boolean; email: string | null; login: () => void }) => void }) {
   const connectWallet = useAppStore((s) => s.connectWallet)
-  const { user: privyUser, authenticated, login } = usePrivy()
+  const { user: privyUser, authenticated, login, logout } = usePrivy()
 
   useEffect(() => {
     if (authenticated && privyUser?.wallet?.address) {
@@ -33,7 +34,8 @@ function AppWithPrivy({ onAuth }: { onAuth: (info: { authenticated: boolean; ema
 
   useEffect(() => {
     privyLoginRef.current = login
-  }, [login])
+    privyLogoutRef.current = logout
+  }, [login, logout])
 
   useEffect(() => {
     const email = privyUser?.email?.address ?? privyUser?.google?.email ?? null
