@@ -42,11 +42,12 @@ function createMarkerEl(state: MarkerState, rarity: string): HTMLDivElement {
 }
 
 export function MapCanvas() {
-  const mapContainerRef = useRef<HTMLDivElement>(null)
-  const mapRef          = useRef<mapboxgl.Map | null>(null)
-  const markersRef      = useRef<Map<string, mapboxgl.Marker>>(new Map())
-  const userMarkerRef   = useRef<mapboxgl.Marker | null>(null)
-  const userAvatarRef   = useRef<string | null>(null)
+  const mapContainerRef  = useRef<HTMLDivElement>(null)
+  const mapRef           = useRef<mapboxgl.Map | null>(null)
+  const markersRef       = useRef<Map<string, mapboxgl.Marker>>(new Map())
+  const markerStateRef   = useRef<Map<string, MarkerState>>(new Map())
+  const userMarkerRef    = useRef<mapboxgl.Marker | null>(null)
+  const userAvatarRef    = useRef<string | null>(null)
 
   const locations       = useAppStore((s) => s.locations)
   const currentPosition = useAppStore((s) => s.currentPosition)
@@ -89,11 +90,15 @@ export function MapCanvas() {
         const dist = currentPosition
           ? haversineDistance(currentPosition, location.coordinates)
           : Infinity
+        console.log('[Marker]', location.name, 'dist:', Math.round(dist), 'm')
         const state: MarkerState = claimedIds.has(location.id)
           ? 'claimed'
-          : dist <= 100
+          : dist <= 2000
           ? 'in-range'
           : 'out-of-range'
+
+        // Always store latest state so click handler reads current value
+        markerStateRef.current.set(location.id, state)
 
         const existing = markersRef.current.get(location.id)
         if (existing) {
@@ -113,12 +118,13 @@ export function MapCanvas() {
           const el = createMarkerEl(state, location.rarity)
 
           el.addEventListener('click', () => {
-            if (state === 'in-range') {
+            const currentState = markerStateRef.current.get(location.id)
+            console.log('[Marker] Clicked', location.name, 'state:', currentState)
+            if (currentState === 'in-range') {
               openClaim(location.id)
-            } else if (state === 'claimed') {
+            } else if (currentState === 'claimed') {
               showToast('Already claimed this location!', 'info')
             } else {
-              // Pan to location
               mapRef.current?.flyTo({
                 center: [location.coordinates.lng, location.coordinates.lat],
                 zoom: 15,
