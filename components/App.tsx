@@ -18,6 +18,8 @@ import { OnboardingScreen }  from '@/components/screens/OnboardingScreen'
 // Shared refs so components outside Privy tree can trigger sign-in/out
 export const privyLoginRef: { current: (() => void) | null } = { current: null }
 export const privyLogoutRef: { current: (() => Promise<void>) | null } = { current: null }
+// Whether user is currently authenticated with Privy (updated by AppWithPrivy)
+export const privyAuthRef: { current: boolean } = { current: false }
 
 // ── AppWithPrivy ─────────────────────────────────────────────────────────────
 // Only rendered once PrivyProvider is in the tree — safe to call usePrivy()
@@ -35,7 +37,8 @@ function AppWithPrivy({ onAuth }: { onAuth: (info: { authenticated: boolean; ema
   useEffect(() => {
     privyLoginRef.current = login
     privyLogoutRef.current = logout
-  }, [login, logout])
+    privyAuthRef.current = authenticated
+  }, [login, logout, authenticated])
 
   useEffect(() => {
     const email = privyUser?.email?.address ?? privyUser?.google?.email ?? null
@@ -80,14 +83,14 @@ export function App() {
         <OnboardingScreen email={authInfo.email} />
       )}
 
-      {/* Full-screen overlay / navigation screens */}
-      {hasOnboarded && screen === 'claim'         && <ClaimScreen />}
-      {hasOnboarded && screen === 'collection'    && <CollectionScreen />}
-      {hasOnboarded && screen === 'poap-detail'   && <POAPDetailScreen />}
-      {hasOnboarded && screen === 'wallet'        && <WalletScreen />}
-      {hasOnboarded && screen === 'profile'       && <ProfileScreen />}
-      {hasOnboarded && screen === 'avatar-select' && <AvatarSelectScreen />}
-      {hasOnboarded && screen === 'settings'      && <SettingsScreen />}
+      {/* Full-screen overlay / navigation screens — require both onboarded + authenticated */}
+      {hasOnboarded && authInfo.authenticated && screen === 'claim'         && <ClaimScreen />}
+      {hasOnboarded && authInfo.authenticated && screen === 'collection'    && <CollectionScreen />}
+      {hasOnboarded && authInfo.authenticated && screen === 'poap-detail'   && <POAPDetailScreen />}
+      {hasOnboarded && authInfo.authenticated && screen === 'wallet'        && <WalletScreen />}
+      {hasOnboarded && authInfo.authenticated && screen === 'profile'       && <ProfileScreen />}
+      {hasOnboarded && authInfo.authenticated && screen === 'avatar-select' && <AvatarSelectScreen />}
+      {hasOnboarded && authInfo.authenticated && screen === 'settings'      && <SettingsScreen />}
 
       <Toast />
     </main>

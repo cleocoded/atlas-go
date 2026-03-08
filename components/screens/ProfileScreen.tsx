@@ -13,6 +13,7 @@ export function ProfileScreen() {
   const setUsername  = useAppStore((s) => s.setUsername)
   const navigate     = useAppStore((s) => s.navigate)
   const connectWallet = useAppStore((s) => s.connectWallet)
+  const disconnectWallet = useAppStore((s) => s.disconnectWallet)
   const { login, logout, authenticated, user: privyUser } = usePrivy()
 
   const [editing, setEditing]   = useState(false)
@@ -115,7 +116,7 @@ export function ProfileScreen() {
         {/* Auth */}
         <div className="px-4 mb-8">
           {authenticated ? (
-            <Button variant="danger" fullWidth onClick={logout}>
+            <Button variant="danger" fullWidth onClick={() => { disconnectWallet(); logout() }}>
               Log Out
             </Button>
           ) : (

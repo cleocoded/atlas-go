@@ -1,6 +1,6 @@
 'use client'
 import { useAppStore } from '@/store/appStore'
-import { privyLoginRef } from '@/components/App'
+import { privyLoginRef, privyAuthRef } from '@/components/App'
 import { Screen } from '@/types'
 
 const MENU_ITEMS: { label: string; icon: string; screen: Screen }[] = [
@@ -15,10 +15,13 @@ export function POAPMenuButton() {
   const closeMenu    = useAppStore((s) => s.closeMenu)
   const navigate     = useAppStore((s) => s.navigate)
   const hasOnboarded = useAppStore((s) => s.hasOnboarded)
+  const walletConnected = useAppStore((s) => s.wallet.isConnected)
+
+  const isFullyLoggedIn = hasOnboarded && (walletConnected || privyAuthRef.current)
 
   const handleNavigate = (screen: Screen) => {
     closeMenu()
-    if (!hasOnboarded) {
+    if (!isFullyLoggedIn) {
       privyLoginRef.current?.()
     } else {
       navigate(screen)

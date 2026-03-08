@@ -1,15 +1,19 @@
 'use client'
 import Image from 'next/image'
 import { useAppStore } from '@/store/appStore'
-import { privyLoginRef } from '@/components/App'
+import { privyLoginRef, privyAuthRef } from '@/components/App'
 
 export function AvatarThumbnail() {
   const avatar       = useAppStore((s) => s.user.avatar)
   const navigate     = useAppStore((s) => s.navigate)
   const hasOnboarded = useAppStore((s) => s.hasOnboarded)
+  const walletConnected = useAppStore((s) => s.wallet.isConnected)
+
+  // Show full profile only when onboarded AND authenticated
+  const isFullyLoggedIn = hasOnboarded && (walletConnected || privyAuthRef.current)
 
   const handleClick = () => {
-    if (!hasOnboarded) {
+    if (!isFullyLoggedIn) {
       privyLoginRef.current?.()
     } else {
       navigate('profile')
@@ -17,7 +21,7 @@ export function AvatarThumbnail() {
   }
 
   // Not logged in — show sign-in icon matching nav button size
-  if (!hasOnboarded) {
+  if (!isFullyLoggedIn) {
     return (
       <button
         onClick={handleClick}

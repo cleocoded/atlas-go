@@ -324,6 +324,7 @@ export const useAppStore = create<AppState & AppActions>()(
         s.wallet.activeBoost = null
         s.wallet.accruedYield = 0
         s.wallet.yieldRatePerSecond = 0
+        s.currentScreen = 'map'
       }),
 
     deposit: (amount) => {
