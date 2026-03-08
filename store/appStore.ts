@@ -101,6 +101,7 @@ const initialState: AppState = {
   activeClaimLocationId: null,
   activePoapDetailId: null,
   toast: null,
+  hasOnboarded: false,
 }
 
 // ── Store actions interface ───────────────────────────────────────────────────
@@ -141,6 +142,9 @@ interface AppActions {
   // Profile
   setUsername: (name: string) => void
   setAvatar: (avatar: AvatarType) => void
+
+  // Onboarding
+  completeOnboarding: (username: string, avatar: AvatarType) => void
 
   // Toast
   showToast: (text: string, type?: ToastMessage['type']) => void
@@ -395,6 +399,13 @@ export const useAppStore = create<AppState & AppActions>()(
     setUsername: (name) => set((s) => { s.user.username = name }),
     setAvatar:   (avatar) => set((s) => { s.user.avatar = avatar }),
 
+    completeOnboarding: (username, avatar) => set((s) => {
+      s.user.username = username
+      s.user.avatar = avatar
+      s.hasOnboarded = true
+      s.currentScreen = 'map'
+    }),
+
     // ── Toast ────────────────────────────────────────────────────────────────
 
     showToast: (text, type = 'info') =>
@@ -436,10 +447,12 @@ export const useAppStore = create<AppState & AppActions>()(
         avatar: state.user.avatar,
         username: state.user.username,
       },
+      hasOnboarded: state.hasOnboarded,
     }),
     merge: (persisted, current) => ({
       ...current,
       user: { ...(current as AppState).user, ...(persisted as any)?.user },
+      hasOnboarded: (persisted as any)?.hasOnboarded ?? false,
     }),
   },
   )

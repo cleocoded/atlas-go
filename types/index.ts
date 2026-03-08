@@ -124,6 +124,7 @@ export interface AppState {
   activeClaimLocationId: string | null
   activePoapDetailId: string | null
   toast: ToastMessage | null
+  hasOnboarded: boolean
 }
 
 export interface ToastMessage {
