@@ -1,7 +1,7 @@
 export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getMinterSigner, getPoapContract, getYieldContract, locationIdToBytes32 } from '@/lib/flowEvm'
+import { getMinterSigner, getEmblemContract, getYieldContract, locationIdToBytes32 } from '@/lib/flowEvm'
 import { getRarity } from '@/types'
 
 // Location registry — in production this comes from a DB / admin CMS
@@ -35,7 +35,7 @@ const LOCATION_REGISTRY: Record<string, {
 
 /**
  * POST /api/claim
- * Gasless POAP mint relay. Called by the frontend after the user taps "Spin to Claim."
+ * Gasless emblem mint relay. Called by the frontend after the user taps "Spin to Claim."
  * The minter wallet pays gas on Flow EVM (effectively free for the user via Privy sponsorship).
  *
  * Body: { walletAddress: string, locationId: string }
@@ -76,18 +76,18 @@ export async function POST(req: NextRequest) {
     // ── On-chain: check already claimed ─────────────────────────────────────
 
     const signer    = getMinterSigner()
-    const poapContract  = getPoapContract(signer)
+    const emblemContract  = getEmblemContract(signer)
     const yieldContract = getYieldContract(signer)
     const locationBytes = locationIdToBytes32(locationId)
 
-    const alreadyClaimed = await poapContract.hasClaimed(locationBytes, walletAddress)
+    const alreadyClaimed = await emblemContract.hasClaimed(locationBytes, walletAddress)
     if (alreadyClaimed) {
       return NextResponse.json({ error: 'Already claimed this location' }, { status: 409 })
     }
 
-    // ── Mint POAP (gasless — minter pays) ────────────────────────────────────
+    // ── Mint Emblem (gasless — minter pays) ──────────────────────────────────
 
-    const mintTx = await poapContract.mintPOAP(
+    const mintTx = await emblemContract.mintEmblem(
       walletAddress,
       locationBytes,
       location.metadataUri,
@@ -99,12 +99,12 @@ export async function POST(req: NextRequest) {
     const receipt = await mintTx.wait()
 
     // Parse tokenId from emitted event
-    const poapIface = poapContract.interface
+    const emblemIface = emblemContract.interface
     let tokenId = '0'
     for (const log of receipt.logs) {
       try {
-        const parsed = poapIface.parseLog({ topics: log.topics, data: log.data })
-        if (parsed?.name === 'POAPClaimed') {
+        const parsed = emblemIface.parseLog({ topics: log.topics, data: log.data })
+        if (parsed?.name === 'EmblemClaimed') {
           tokenId = parsed.args[1].toString()
           break
         }

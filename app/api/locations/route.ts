@@ -14,8 +14,8 @@ const SINGAPORE_LOCATIONS: Omit<Location, 'rarity'>[] = [
     partnerName: 'PayPal',
     partnerLogo: '/logos/paypal.svg',
     coordinates: { lat: 1.3007, lng: 103.8591 },
-    poapArtwork: '/poap/paypal-sf.svg',
-    poapArtTitle: 'Golden Gate Sunrise',
+    emblemArtwork: '/poap/paypal-sf.svg',
+    emblemArtTitle: 'Golden Gate Sunrise',
     boostPercentage: 300,
     boostDurationHours: 72,
     isActive: true,
@@ -26,8 +26,8 @@ const SINGAPORE_LOCATIONS: Omit<Location, 'rarity'>[] = [
     partnerName: 'Flow',
     partnerLogo: '/logos/flow.svg',
     coordinates: { lat: 1.3025, lng: 103.8565 },
-    poapArtwork: '/poap/flow-hq.svg',
-    poapArtTitle: 'Bay Bridge Blaze',
+    emblemArtwork: '/poap/flow-hq.svg',
+    emblemArtTitle: 'Bay Bridge Blaze',
     boostPercentage: 450,
     boostDurationHours: 48,
     isActive: true,
@@ -38,8 +38,8 @@ const SINGAPORE_LOCATIONS: Omit<Location, 'rarity'>[] = [
     partnerName: 'PayPal',
     partnerLogo: '/logos/paypal.svg',
     coordinates: { lat: 1.2994, lng: 103.8555 },
-    poapArtwork: '/poap/paypal-downtown.svg',
-    poapArtTitle: null,
+    emblemArtwork: '/poap/paypal-downtown.svg',
+    emblemArtTitle: null,
     boostPercentage: 220,
     boostDurationHours: 24,
     isActive: true,
@@ -50,8 +50,8 @@ const SINGAPORE_LOCATIONS: Omit<Location, 'rarity'>[] = [
     partnerName: 'Flow',
     partnerLogo: '/logos/flow.svg',
     coordinates: { lat: 1.3018, lng: 103.8612 },
-    poapArtwork: '/poap/flow-events.svg',
-    poapArtTitle: 'Sunset District Badge',
+    emblemArtwork: '/poap/flow-events.svg',
+    emblemArtTitle: 'Sunset District Badge',
     boostPercentage: 380,
     boostDurationHours: 96,
     isActive: true,
@@ -74,8 +74,8 @@ function generateNearbyLocations(lat: number, lng: number): Omit<Location, 'rari
     partnerName: 'Flow',
     partnerLogo: '/logos/flow.svg',
     coordinates: { lat: lat + n.dlat, lng: lng + n.dlng },
-    poapArtwork: '/poap/flow-hq.svg',
-    poapArtTitle: n.title,
+    emblemArtwork: '/poap/flow-hq.svg',
+    emblemArtTitle: n.title,
     boostPercentage: n.boost,
     boostDurationHours: n.hours,
     isActive: true,
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
 
   let allLocations = [...SINGAPORE_LOCATIONS]
 
-  // If user position provided and they're NOT already near Singapore, add nearby POAPs
+  // If user position provided and they're NOT already near Singapore, add nearby emblems
   if (lat && lng) {
     const userLat = parseFloat(lat)
     const userLng = parseFloat(lng)

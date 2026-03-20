@@ -2,7 +2,7 @@
 import Image from 'next/image'
 import { RarityTier } from '@/types'
 
-interface POAPCircleProps {
+interface EmblemCircleProps {
   src: string
   alt: string
   size: number
@@ -18,7 +18,7 @@ const BORDER_CLASS: Record<RarityTier, string> = {
   legendary: 'rarity-legendary',
 }
 
-export function POAPCircle({ src, alt, size, rarity, isActive, className = '' }: POAPCircleProps) {
+export function EmblemCircle({ src, alt, size, rarity, isActive, className = '' }: EmblemCircleProps) {
   const borderClass = isActive
     ? rarity === 'legendary'
       ? 'border-rainbow'

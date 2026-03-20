@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import type {
   AppState,
-  CollectedPOAP,
+  CollectedEmblem,
   Location,
   ActivityItem,
   CollectionFilter,
@@ -22,8 +22,8 @@ const MOCK_LOCATIONS: Location[] = [
     partnerName: 'PayPal',
     partnerLogo: '/logos/paypal.svg',
     coordinates: { lat: 1.3007, lng: 103.8591 },
-    poapArtwork: '/poap/paypal-sf.svg',
-    poapArtTitle: 'Golden Gate Sunrise',
+    emblemArtwork: '/poap/paypal-sf.svg',
+    emblemArtTitle: 'Golden Gate Sunrise',
     boostPercentage: 300,
     boostDurationHours: 72,
     rarity: 'uncommon',
@@ -35,8 +35,8 @@ const MOCK_LOCATIONS: Location[] = [
     partnerName: 'Flow',
     partnerLogo: '/logos/flow.svg',
     coordinates: { lat: 1.3025, lng: 103.8565 },
-    poapArtwork: '/poap/flow-hq.svg',
-    poapArtTitle: 'Bay Bridge Blaze',
+    emblemArtwork: '/poap/flow-hq.svg',
+    emblemArtTitle: 'Bay Bridge Blaze',
     boostPercentage: 450,
     boostDurationHours: 48,
     rarity: 'legendary',
@@ -48,8 +48,8 @@ const MOCK_LOCATIONS: Location[] = [
     partnerName: 'PayPal',
     partnerLogo: '/logos/paypal.svg',
     coordinates: { lat: 1.2994, lng: 103.8555 },
-    poapArtwork: '/poap/paypal-downtown.svg',
-    poapArtTitle: null,
+    emblemArtwork: '/poap/paypal-downtown.svg',
+    emblemArtTitle: null,
     boostPercentage: 220,
     boostDurationHours: 24,
     rarity: 'common',
@@ -61,8 +61,8 @@ const MOCK_LOCATIONS: Location[] = [
     partnerName: 'Flow',
     partnerLogo: '/logos/flow.svg',
     coordinates: { lat: 1.3018, lng: 103.8612 },
-    poapArtwork: '/poap/flow-events.svg',
-    poapArtTitle: 'Sunset District Badge',
+    emblemArtwork: '/poap/flow-events.svg',
+    emblemArtTitle: 'Sunset District Badge',
     boostPercentage: 380,
     boostDurationHours: 96,
     rarity: 'rare',
@@ -77,7 +77,7 @@ const initialState: AppState = {
     username: 'Explorer',
     avatar: 'none',
     walletAddress: null,
-    totalPOAPsClaimed: 0,
+    totalEmblemsClaimed: 0,
     totalYieldEarned: 0,
     locationsVisited: 0,
   },
@@ -91,7 +91,7 @@ const initialState: AppState = {
     yieldRatePerSecond: 0,
   },
   locations: MOCK_LOCATIONS,
-  collectedPOAPs: [],
+  collectedEmblems: [],
   activity: [],
   selectedFilter: 'active',
   gpsEnabled: false,
@@ -99,7 +99,7 @@ const initialState: AppState = {
   menuOpen: false,
   currentScreen: 'map',
   activeClaimLocationId: null,
-  activePoapDetailId: null,
+  activeEmblemDetailId: null,
   toast: null,
   hasOnboarded: false,
 }
@@ -122,13 +122,13 @@ interface AppActions {
   // Claim flow
   openClaim: (locationId: string) => void
   closeClaim: () => void
-  claimPOAP: (locationId: string) => Promise<void>
+  claimEmblem: (locationId: string) => Promise<void>
 
   // Collection
   setFilter: (filter: CollectionFilter) => void
-  openPoapDetail: (poapId: string) => void
-  hidePOAP: (poapId: string) => void
-  unhidePOAP: (poapId: string) => void
+  openEmblemDetail: (emblemId: string) => void
+  hideEmblem: (emblemId: string) => void
+  unhideEmblem: (emblemId: string) => void
 
   // Wallet
   connectWallet: (address: string) => void
@@ -176,7 +176,7 @@ export const useAppStore = create<AppState & AppActions>()(
       set((s) => {
         s.currentScreen = 'map'
         s.activeClaimLocationId = null
-        s.activePoapDetailId = null
+        s.activeEmblemDetailId = null
       }),
 
     // ── Menu ────────────────────────────────────────────────────────────────
@@ -207,7 +207,7 @@ export const useAppStore = create<AppState & AppActions>()(
         s.currentScreen = 'map'
       }),
 
-    claimPOAP: async (locationId) => {
+    claimEmblem: async (locationId) => {
       const state = get()
       const location = state.locations.find((l) => l.id === locationId)
       if (!location) return
@@ -233,13 +233,13 @@ export const useAppStore = create<AppState & AppActions>()(
         await new Promise((r) => setTimeout(r, 2000))
       }
 
-      const newPOAP: CollectedPOAP = {
-        id: `poap-${Date.now()}`,
+      const newEmblem: CollectedEmblem = {
+        id: `emblem-${Date.now()}`,
         locationId,
         locationName: location.name,
         partnerName: location.partnerName,
-        artwork: location.poapArtwork,
-        artTitle: location.poapArtTitle,
+        artwork: location.emblemArtwork,
+        artTitle: location.emblemArtTitle,
         claimedAt: now.toISOString(),
         expiresAt: expiresAt.toISOString(),
         boostPercentage: location.boostPercentage,
@@ -255,7 +255,7 @@ export const useAppStore = create<AppState & AppActions>()(
       }
 
       const newBoost: ActiveBoost = {
-        poapId: newPOAP.id,
+        emblemId: newEmblem.id,
         boostPercentage: location.boostPercentage,
         effectiveAPY: state.wallet.baseAPY + location.boostPercentage,
         startedAt: now.toISOString(),
@@ -268,24 +268,24 @@ export const useAppStore = create<AppState & AppActions>()(
       const yieldPerSecond = (state.wallet.balance * (effectiveApy / 100)) / 31536000
 
       set((s) => {
-        // Expire previous active POAP if any
+        // Expire previous active emblem if any
         if (s.wallet.activeBoost) {
-          const oldPoapIdx = s.collectedPOAPs.findIndex(
-            (p) => p.id === s.wallet.activeBoost?.poapId
+          const oldEmblemIdx = s.collectedEmblems.findIndex(
+            (p) => p.id === s.wallet.activeBoost?.emblemId
           )
-          if (oldPoapIdx !== -1) s.collectedPOAPs[oldPoapIdx].isActive = false
+          if (oldEmblemIdx !== -1) s.collectedEmblems[oldEmblemIdx].isActive = false
         }
 
-        s.collectedPOAPs.unshift(newPOAP)
+        s.collectedEmblems.unshift(newEmblem)
         s.wallet.activeBoost = newBoost
         s.wallet.yieldRatePerSecond = yieldPerSecond
-        s.user.totalPOAPsClaimed += 1
+        s.user.totalEmblemsClaimed += 1
         s.user.locationsVisited += 1
         s.currentScreen = 'map'
         s.activeClaimLocationId = null
       })
 
-      get().addActivity({ type: 'claim', description: `Claimed "${location.poapArtTitle ?? location.name}" POAP`, amount: null })
+      get().addActivity({ type: 'claim', description: `Claimed "${location.emblemArtTitle ?? location.name}" emblem`, amount: null })
       get().addActivity({ type: 'boost_activated', description: `Boost activated: +${location.boostPercentage}% APY for ${location.boostDurationHours}h`, amount: null })
       get().showToast(`Claimed! +${location.boostPercentage}% APY boost activated`, 'success')
     },
@@ -294,18 +294,18 @@ export const useAppStore = create<AppState & AppActions>()(
 
     setFilter: (filter) => set((s) => { s.selectedFilter = filter }),
 
-    openPoapDetail: (poapId) =>
+    openEmblemDetail: (emblemId) =>
       set((s) => {
-        s.activePoapDetailId = poapId
-        s.currentScreen = 'poap-detail'
+        s.activeEmblemDetailId = emblemId
+        s.currentScreen = 'emblem-detail'
       }),
 
-    hidePOAP:   (poapId) => set((s) => {
-      const p = s.collectedPOAPs.find((x) => x.id === poapId)
+    hideEmblem:   (emblemId) => set((s) => {
+      const p = s.collectedEmblems.find((x) => x.id === emblemId)
       if (p) p.isHidden = true
     }),
-    unhidePOAP: (poapId) => set((s) => {
-      const p = s.collectedPOAPs.find((x) => x.id === poapId)
+    unhideEmblem: (emblemId) => set((s) => {
+      const p = s.collectedEmblems.find((x) => x.id === emblemId)
       if (p) p.isHidden = false
     }),
 
@@ -373,10 +373,10 @@ export const useAppStore = create<AppState & AppActions>()(
       if (now >= expiry) {
         set((s) => {
           if (s.wallet.activeBoost) {
-            const poapIdx = s.collectedPOAPs.findIndex(
-              (p) => p.id === s.wallet.activeBoost?.poapId
+            const emblemIdx = s.collectedEmblems.findIndex(
+              (p) => p.id === s.wallet.activeBoost?.emblemId
             )
-            if (poapIdx !== -1) s.collectedPOAPs[poapIdx].isActive = false
+            if (emblemIdx !== -1) s.collectedEmblems[emblemIdx].isActive = false
           }
           s.wallet.activeBoost = null
           s.wallet.yieldRatePerSecond = (s.wallet.balance * (s.wallet.baseAPY / 100)) / 31536000
@@ -467,12 +467,12 @@ export const useAppStore = create<AppState & AppActions>()(
 // ── Selectors ─────────────────────────────────────────────────────────────────
 
 export const selectClaimedLocationIds = (state: AppState) =>
-  new Set(state.collectedPOAPs.map((p) => p.locationId))
+  new Set(state.collectedEmblems.map((p) => p.locationId))
 
-export const selectFilteredPOAPs = (state: AppState) => {
-  const { collectedPOAPs, selectedFilter } = state
+export const selectFilteredEmblems = (state: AppState) => {
+  const { collectedEmblems, selectedFilter } = state
   const now = Date.now()
-  return collectedPOAPs.filter((p) => {
+  return collectedEmblems.filter((p) => {
     const active = new Date(p.expiresAt).getTime() > now
     if (selectedFilter === 'active') return active && !p.isHidden
     if (selectedFilter === 'expired') return !active && !p.isHidden
@@ -484,8 +484,8 @@ export const selectFilteredPOAPs = (state: AppState) => {
 export const selectFilterCounts = (state: AppState) => {
   const now = Date.now()
   return {
-    active:  state.collectedPOAPs.filter((p) => new Date(p.expiresAt).getTime() > now && !p.isHidden).length,
-    expired: state.collectedPOAPs.filter((p) => new Date(p.expiresAt).getTime() <= now && !p.isHidden).length,
-    hidden:  state.collectedPOAPs.filter((p) => p.isHidden).length,
+    active:  state.collectedEmblems.filter((p) => new Date(p.expiresAt).getTime() > now && !p.isHidden).length,
+    expired: state.collectedEmblems.filter((p) => new Date(p.expiresAt).getTime() <= now && !p.isHidden).length,
+    hidden:  state.collectedEmblems.filter((p) => p.isHidden).length,
   }
 }

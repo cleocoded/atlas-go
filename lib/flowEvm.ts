@@ -24,8 +24,8 @@ export function getMinterSigner(): ethers.Wallet {
 
 // ── Minimal ABIs ──────────────────────────────────────────────────────────────
 
-export const POAP_ABI = [
-  'function mintPOAP(address claimer, bytes32 locationId, string tokenURI, uint16 boostPercentage, uint32 boostDurationHours) returns (uint256)',
+export const EMBLEM_ABI = [
+  'function mintEmblem(address claimer, bytes32 locationId, string tokenURI, uint16 boostPercentage, uint32 boostDurationHours) returns (uint256)',
   'function hasClaimed(bytes32 locationId, address claimer) view returns (bool)',
   'function totalSupply() view returns (uint256)',
 ]
@@ -43,10 +43,10 @@ export const STGUSDС_ABI = [
   'function decimals() view returns (uint8)',
 ]
 
-export function getPoapContract(signerOrProvider?: ethers.Signer | ethers.Provider) {
+export function getEmblemContract(signerOrProvider?: ethers.Signer | ethers.Provider) {
   const addr = process.env.NEXT_PUBLIC_POAP_CONTRACT
   if (!addr) throw new Error('NEXT_PUBLIC_POAP_CONTRACT not set')
-  return new ethers.Contract(addr, POAP_ABI, signerOrProvider ?? getProvider())
+  return new ethers.Contract(addr, EMBLEM_ABI, signerOrProvider ?? getProvider())
 }
 
 export function getYieldContract(signerOrProvider?: ethers.Signer | ethers.Provider) {

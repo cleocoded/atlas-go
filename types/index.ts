@@ -16,7 +16,7 @@ export type Screen =
   | 'map'
   | 'claim'
   | 'collection'
-  | 'poap-detail'
+  | 'emblem-detail'
   | 'wallet'
   | 'profile'
   | 'avatar-select'
@@ -38,17 +38,17 @@ export interface Location {
   partnerName: string
   partnerLogo: string
   coordinates: { lat: number; lng: number }
-  poapArtwork: string
-  poapArtTitle: string | null
+  emblemArtwork: string
+  emblemArtTitle: string | null
   boostPercentage: number   // 200–500
   boostDurationHours: number // 1–168
   rarity: RarityTier        // derived from boostPercentage
   isActive: boolean
 }
 
-// ── POAP ──────────────────────────────────────────────────────────────────────
+// ── Emblem ────────────────────────────────────────────────────────────────────
 
-export interface CollectedPOAP {
+export interface CollectedEmblem {
   id: string
   locationId: string
   locationName: string
@@ -69,7 +69,7 @@ export interface CollectedPOAP {
 // ── Wallet ────────────────────────────────────────────────────────────────────
 
 export interface ActiveBoost {
-  poapId: string
+  emblemId: string
   boostPercentage: number
   effectiveAPY: number    // baseAPY + boostPercentage
   startedAt: string       // ISO 8601
@@ -93,7 +93,7 @@ export interface UserProfile {
   username: string
   avatar: AvatarType
   walletAddress: string | null
-  totalPOAPsClaimed: number
+  totalEmblemsClaimed: number
   totalYieldEarned: number
   locationsVisited: number
 }
@@ -114,7 +114,7 @@ export interface AppState {
   user: UserProfile
   wallet: WalletState
   locations: Location[]
-  collectedPOAPs: CollectedPOAP[]
+  collectedEmblems: CollectedEmblem[]
   activity: ActivityItem[]
   selectedFilter: CollectionFilter
   gpsEnabled: boolean
@@ -122,7 +122,7 @@ export interface AppState {
   menuOpen: boolean
   currentScreen: Screen
   activeClaimLocationId: string | null
-  activePoapDetailId: string | null
+  activeEmblemDetailId: string | null
   toast: ToastMessage | null
   hasOnboarded: boolean
 }

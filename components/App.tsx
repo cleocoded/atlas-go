@@ -8,7 +8,7 @@ import { Toast }             from '@/components/ui/Toast'
 import { MapScreen }         from '@/components/screens/MapScreen'
 import { ClaimScreen }       from '@/components/screens/ClaimScreen'
 import { CollectionScreen }  from '@/components/screens/CollectionScreen'
-import { POAPDetailScreen }  from '@/components/screens/POAPDetailScreen'
+import { EmblemDetailScreen }  from '@/components/screens/EmblemDetailScreen'
 import { WalletScreen }      from '@/components/screens/WalletScreen'
 import { ProfileScreen }     from '@/components/screens/ProfileScreen'
 import { AvatarSelectScreen } from '@/components/screens/AvatarSelectScreen'
@@ -83,7 +83,7 @@ export function App() {
       {/* Full-screen overlay / navigation screens — require both onboarded + authenticated */}
       {hasOnboarded && authInfo.authenticated && screen === 'claim'         && <ClaimScreen />}
       {hasOnboarded && authInfo.authenticated && screen === 'collection'    && <CollectionScreen />}
-      {hasOnboarded && authInfo.authenticated && screen === 'poap-detail'   && <POAPDetailScreen />}
+      {hasOnboarded && authInfo.authenticated && screen === 'emblem-detail'  && <EmblemDetailScreen />}
       {hasOnboarded && authInfo.authenticated && screen === 'wallet'        && <WalletScreen />}
       {hasOnboarded && authInfo.authenticated && screen === 'profile'       && <ProfileScreen />}
       {hasOnboarded && authInfo.authenticated && screen === 'avatar-select' && <AvatarSelectScreen />}

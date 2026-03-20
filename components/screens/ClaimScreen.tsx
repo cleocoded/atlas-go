@@ -10,7 +10,7 @@ export function ClaimScreen() {
   const locations  = useAppStore((s) => s.locations)
   const wallet     = useAppStore((s) => s.wallet)
   const closeClaim = useAppStore((s) => s.closeClaim)
-  const claimPOAP  = useAppStore((s) => s.claimPOAP)
+  const claimEmblem  = useAppStore((s) => s.claimEmblem)
   const showToast  = useAppStore((s) => s.showToast)
   const activeBoost = wallet.activeBoost
 
@@ -68,7 +68,7 @@ export function ClaimScreen() {
     }
 
     try {
-      await claimPOAP(location.id)
+      await claimEmblem(location.id)
       setClaimState('success')
     } catch {
       setClaimState('error')
@@ -115,7 +115,7 @@ export function ClaimScreen() {
           </button>
         </div>
 
-        {/* POAP artwork */}
+        {/* Emblem artwork */}
         <div className="flex-1 flex flex-col items-center justify-center px-8 gap-4">
           <div
             className={`
@@ -191,7 +191,7 @@ export function ClaimScreen() {
             <h3 className="text-heading font-bold text-text-primary mb-3">Replace Active Boost?</h3>
             <p className="text-body-md text-text-secondary mb-6">
               You already have an active boost (+{activeBoost.boostPercentage}% for{' '}
-              {formatCountdown(activeBoost.remainingSeconds)} remaining). Claiming this POAP will replace your current boost.
+              {formatCountdown(activeBoost.remainingSeconds)} remaining). Claiming this emblem will replace your current boost.
             </p>
             <div className="flex gap-3">
               <Button

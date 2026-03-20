@@ -1,54 +1,54 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("AtlasGoPOAP", function () {
-  let poap, owner, minter, user1, user2;
+describe("AtlasGoEmblem", function () {
+  let emblem, owner, minter, user1, user2;
 
   beforeEach(async () => {
     [owner, minter, user1, user2] = await ethers.getSigners();
-    const POAP = await ethers.getContractFactory("AtlasGoPOAP");
-    poap = await POAP.deploy(minter.address);
-    await poap.waitForDeployment();
+    const Emblem = await ethers.getContractFactory("AtlasGoEmblem");
+    emblem = await Emblem.deploy(minter.address);
+    await emblem.waitForDeployment();
   });
 
   it("deploys with correct name and symbol", async () => {
-    expect(await poap.name()).to.equal("Atlas Go POAP");
-    expect(await poap.symbol()).to.equal("AGPOAP");
+    expect(await emblem.name()).to.equal("Atlas Go Emblem");
+    expect(await emblem.symbol()).to.equal("AGEMBLEM");
   });
 
-  it("mints a POAP for a claimer", async () => {
+  it("mints an Emblem for a claimer", async () => {
     const locationId = ethers.keccak256(ethers.toUtf8Bytes("loc-paypal-sf"));
-    await poap.connect(minter).mintPOAP(
+    await emblem.connect(minter).mintEmblem(
       user1.address,
       locationId,
       "ipfs://QmTest/1.json",
       300,
       72
     );
-    expect(await poap.totalSupply()).to.equal(1);
-    expect(await poap.ownerOf(1)).to.equal(user1.address);
-    expect(await poap.hasClaimed(locationId, user1.address)).to.be.true;
+    expect(await emblem.totalSupply()).to.equal(1);
+    expect(await emblem.ownerOf(1)).to.equal(user1.address);
+    expect(await emblem.hasClaimed(locationId, user1.address)).to.be.true;
   });
 
   it("prevents double-claiming the same location", async () => {
     const locationId = ethers.keccak256(ethers.toUtf8Bytes("loc-paypal-sf"));
-    await poap.connect(minter).mintPOAP(user1.address, locationId, "ipfs://1", 300, 72);
+    await emblem.connect(minter).mintEmblem(user1.address, locationId, "ipfs://1", 300, 72);
     await expect(
-      poap.connect(minter).mintPOAP(user1.address, locationId, "ipfs://2", 300, 72)
+      emblem.connect(minter).mintEmblem(user1.address, locationId, "ipfs://2", 300, 72)
     ).to.be.revertedWith("Already claimed this location");
   });
 
   it("allows different users to claim the same location", async () => {
     const locationId = ethers.keccak256(ethers.toUtf8Bytes("loc-flow-hq"));
-    await poap.connect(minter).mintPOAP(user1.address, locationId, "ipfs://1", 450, 48);
-    await poap.connect(minter).mintPOAP(user2.address, locationId, "ipfs://2", 450, 48);
-    expect(await poap.totalSupply()).to.equal(2);
+    await emblem.connect(minter).mintEmblem(user1.address, locationId, "ipfs://1", 450, 48);
+    await emblem.connect(minter).mintEmblem(user2.address, locationId, "ipfs://2", 450, 48);
+    expect(await emblem.totalSupply()).to.equal(2);
   });
 
   it("stores boost metadata correctly", async () => {
     const locationId = ethers.keccak256(ethers.toUtf8Bytes("loc-flow-events"));
-    await poap.connect(minter).mintPOAP(user1.address, locationId, "ipfs://1", 380, 96);
-    const meta = await poap.getTokenMeta(1);
+    await emblem.connect(minter).mintEmblem(user1.address, locationId, "ipfs://1", 380, 96);
+    const meta = await emblem.getTokenMeta(1);
     expect(meta.boostPercentage).to.equal(380);
     expect(meta.boostDurationHours).to.equal(96);
   });
@@ -56,17 +56,17 @@ describe("AtlasGoPOAP", function () {
   it("rejects boost percentage out of range", async () => {
     const locationId = ethers.keccak256(ethers.toUtf8Bytes("loc-test"));
     await expect(
-      poap.connect(minter).mintPOAP(user1.address, locationId, "ipfs://1", 100, 24)
+      emblem.connect(minter).mintEmblem(user1.address, locationId, "ipfs://1", 100, 24)
     ).to.be.revertedWith("Boost out of range");
     await expect(
-      poap.connect(minter).mintPOAP(user1.address, locationId, "ipfs://1", 600, 24)
+      emblem.connect(minter).mintEmblem(user1.address, locationId, "ipfs://1", 600, 24)
     ).to.be.revertedWith("Boost out of range");
   });
 
   it("only minter can mint", async () => {
     const locationId = ethers.keccak256(ethers.toUtf8Bytes("loc-test"));
     await expect(
-      poap.connect(user1).mintPOAP(user1.address, locationId, "ipfs://1", 300, 72)
+      emblem.connect(user1).mintEmblem(user1.address, locationId, "ipfs://1", 300, 72)
     ).to.be.revertedWith("Not authorized minter");
   });
 });

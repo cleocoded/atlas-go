@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
  *   1. Users deposit stgUSDC — funds are forwarded to More Markets lending
  *      (via an adapter address set by owner — actual More Markets integration
  *       via their SDK/API on the backend).
- *   2. On POAP claim (called by minter/relayer), the user's active boost is
+ *   2. On Emblem claim (called by minter/relayer), the user's active boost is
  *      recorded. Maximum 1 active boost per user at a time.
  *   3. Base APY = 3%. Boost APY is additive. Partnership sponsors fund the
  *      boost subsidy by sending stgUSDC to this contract.
@@ -37,7 +37,7 @@ contract YieldBoost is Ownable {
     uint256 public totalDeposits;
 
     struct ActiveBoost {
-        uint256 tokenId;           // POAP token ID that activated this boost
+        uint256 tokenId;           // Emblem token ID that activated this boost
         uint16  boostPercentage;   // e.g. 250
         uint64  startedAt;
         uint64  expiresAt;
@@ -119,7 +119,7 @@ contract YieldBoost is Ownable {
 
     /**
      * @notice Set or replace a user's active yield boost.
-     *         Called by the Privy relayer after a successful POAP mint.
+     *         Called by the Privy relayer after a successful Emblem mint.
      *         Replacing an active boost is allowed — old boost ends immediately.
      */
     function setBoost(

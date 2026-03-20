@@ -6,13 +6,13 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title AtlasGoPOAP
- * @notice ERC-721 POAP NFT contract for Atlas Go on Flow EVM.
+ * @title AtlasGoEmblem
+ * @notice ERC-721 Emblem NFT contract for Atlas Go on Flow EVM.
  *         Each token represents a claimed real-world location visit.
  *         Minting is gasless via Privy-sponsored transactions (relayer calls mint).
  *         One claim per (wallet, locationId) — enforced on-chain.
  */
-contract AtlasGoPOAP is ERC721URIStorage, Ownable {
+contract AtlasGoEmblem is ERC721URIStorage, Ownable {
     uint256 private _nextTokenId;
 
     // Address authorized to call mint (Privy relayer / backend)
@@ -33,7 +33,7 @@ contract AtlasGoPOAP is ERC721URIStorage, Ownable {
     }
     mapping(uint256 => BoostMeta) public boostMeta;
 
-    event POAPClaimed(
+    event EmblemClaimed(
         address indexed claimer,
         uint256 indexed tokenId,
         bytes32 indexed locationId,
@@ -46,7 +46,7 @@ contract AtlasGoPOAP is ERC721URIStorage, Ownable {
         _;
     }
 
-    constructor(address _minter) ERC721("Atlas Go POAP", "AGPOAP") Ownable(msg.sender) {
+    constructor(address _minter) ERC721("Atlas Go Emblem", "AGEMBLEM") Ownable(msg.sender) {
         minter = _minter;
     }
 
@@ -59,14 +59,14 @@ contract AtlasGoPOAP is ERC721URIStorage, Ownable {
     // ── Minting ────────────────────────────────────────────────────────────────
 
     /**
-     * @notice Mint a POAP for a claimer. Called by the Privy relayer (gasless).
+     * @notice Mint an Emblem for a claimer. Called by the Privy relayer (gasless).
      * @param claimer           The user's wallet address
      * @param locationId        Unique location identifier (bytes32 hash of location string ID)
-     * @param tokenURI_         IPFS URI for POAP metadata
+     * @param tokenURI_         IPFS URI for Emblem metadata
      * @param boostPercentage   APY boost percentage (e.g. 250)
      * @param boostDurationHours Duration of boost in hours
      */
-    function mintPOAP(
+    function mintEmblem(
         address claimer,
         bytes32 locationId,
         string calldata tokenURI_,
@@ -97,7 +97,7 @@ contract AtlasGoPOAP is ERC721URIStorage, Ownable {
             expiresAt:         expiresAt
         });
 
-        emit POAPClaimed(claimer, newTokenId, locationId, boostPercentage, expiresAt);
+        emit EmblemClaimed(claimer, newTokenId, locationId, boostPercentage, expiresAt);
 
         return newTokenId;
     }

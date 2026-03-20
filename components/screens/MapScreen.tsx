@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef } from 'react'
 import { MapCanvas }      from '@/components/map/MapCanvas'
-import { POAPMenuButton } from '@/components/map/POAPMenuButton'
+import { EmblemMenuButton } from '@/components/map/EmblemMenuButton'
 import { AvatarThumbnail } from '@/components/map/AvatarThumbnail'
 import { PartnerLogos }   from '@/components/map/PartnerLogos'
 import { GPSBanner }      from '@/components/map/GPSBanner'
@@ -26,7 +26,7 @@ export function MapScreen() {
       console.log('[GPS] Position fix:', pos.coords.latitude.toFixed(5), pos.coords.longitude.toFixed(5), 'accuracy:', pos.coords.accuracy, 'm')
       setGpsEnabled(true)
       setCurrentPos({ lat: pos.coords.latitude, lng: pos.coords.longitude })
-      // Reload locations once with GPS position so nearby POAPs are generated
+      // Reload locations once with GPS position so nearby emblems are generated
       if (!hasReloadedLocationsRef.current) {
         hasReloadedLocationsRef.current = true
         // Small delay to ensure position is in store before fetch
@@ -85,7 +85,7 @@ export function MapScreen() {
       <MapCanvas />
       <PartnerLogos />
       <AvatarThumbnail />
-      <POAPMenuButton />
+      <EmblemMenuButton />
     </div>
   )
 }

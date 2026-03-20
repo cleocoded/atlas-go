@@ -99,8 +99,8 @@ export function ProfileScreen() {
           </p>
           <div className="flex flex-col gap-0">
             <div className="flex justify-between py-3 border-b border-border-default">
-              <span className="text-body-md text-text-tertiary">POAPs Collected</span>
-              <span className="text-label text-text-primary">{user.totalPOAPsClaimed}</span>
+              <span className="text-body-md text-text-tertiary">Emblems Collected</span>
+              <span className="text-label text-text-primary">{user.totalEmblemsClaimed}</span>
             </div>
             <div className="flex justify-between py-3 border-b border-border-default">
               <span className="text-body-md text-text-tertiary">Total Yield Earned</span>

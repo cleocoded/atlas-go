@@ -18,7 +18,7 @@ if (typeof window !== 'undefined') {
   })
 }
 
-export function POAPMenuButton() {
+export function EmblemMenuButton() {
   const menuOpen     = useAppStore((s) => s.menuOpen)
   const toggleMenu   = useAppStore((s) => s.toggleMenu)
   const closeMenu    = useAppStore((s) => s.closeMenu)
