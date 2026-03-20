@@ -1,4 +1,5 @@
 'use client'
+import { useEffect } from 'react'
 import { useAppStore } from '@/store/appStore'
 import { privyLoginRef, privyAuthRef } from '@/components/App'
 import { Screen } from '@/types'
@@ -8,6 +9,14 @@ const MENU_ITEMS: { label: string; icon: string; screen: Screen }[] = [
   { label: 'Wallet',     icon: '/icons/icon-wallet.png',     screen: 'wallet'     },
   { label: 'Settings',   icon: '/icons/icon-settings.png',   screen: 'settings'   },
 ]
+
+// Preload menu icons on module load so they're cached before menu opens
+if (typeof window !== 'undefined') {
+  MENU_ITEMS.forEach((item) => {
+    const img = new Image()
+    img.src = item.icon
+  })
+}
 
 export function POAPMenuButton() {
   const menuOpen     = useAppStore((s) => s.menuOpen)
