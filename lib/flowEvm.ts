@@ -44,8 +44,8 @@ export const STGUSDС_ABI = [
 ]
 
 export function getEmblemContract(signerOrProvider?: ethers.Signer | ethers.Provider) {
-  const addr = process.env.NEXT_PUBLIC_POAP_CONTRACT
-  if (!addr) throw new Error('NEXT_PUBLIC_POAP_CONTRACT not set')
+  const addr = process.env.NEXT_PUBLIC_EMBLEM_CONTRACT
+  if (!addr) throw new Error('NEXT_PUBLIC_EMBLEM_CONTRACT not set')
   return new ethers.Contract(addr, EMBLEM_ABI, signerOrProvider ?? getProvider())
 }
 

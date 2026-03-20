@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     // ── Check env ────────────────────────────────────────────────────────────
 
-    if (!process.env.DEPLOYER_PRIVATE_KEY || !process.env.NEXT_PUBLIC_POAP_CONTRACT) {
+    if (!process.env.DEPLOYER_PRIVATE_KEY || !process.env.NEXT_PUBLIC_EMBLEM_CONTRACT) {
       // Contracts not deployed yet — return a mock success for development
       console.warn('[claim] Contracts not configured — returning mock success')
       return NextResponse.json({

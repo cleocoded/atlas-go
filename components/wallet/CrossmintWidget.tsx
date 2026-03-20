@@ -47,7 +47,7 @@ export function CrossmintWidget({ recipientAddress, onSuccess }: CrossmintWidget
   // The `lineItems` here target a stgUSDC top-up product configured in the Crossmint dashboard.
   // Replace CROSSMINT_COLLECTION_ID with the actual collection/product ID from console.crossmint.io.
   const lineItems = {
-    tokenLocator: `crossmint:${process.env.NEXT_PUBLIC_POAP_CONTRACT ?? 'CONFIGURE_COLLECTION_ID'}`,
+    tokenLocator: `crossmint:${process.env.NEXT_PUBLIC_EMBLEM_CONTRACT ?? 'CONFIGURE_COLLECTION_ID'}`,
     executionParameters: {
       // For crypto onramp: specify recipient on Flow EVM
       mint: {
