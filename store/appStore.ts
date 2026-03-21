@@ -77,6 +77,7 @@ const initialState: AppState = {
     isConnected: false,
     address: null,
     balance: 0,
+    totalWithdrawn: 0,
     baseAPY: 2.5,
     activeBoost: null,
     accruedYield: 0,
@@ -328,6 +329,7 @@ export const useAppStore = create<AppState & AppActions>()(
         s.wallet.address = null
         s.user.walletAddress = null
         s.wallet.balance = 0
+        s.wallet.totalWithdrawn = 0
         s.wallet.activeBoost = null
         s.wallet.accruedYield = 0
         s.wallet.yieldRatePerSecond = 0
@@ -348,6 +350,7 @@ export const useAppStore = create<AppState & AppActions>()(
     withdraw: (amount) => {
       set((s) => {
         s.wallet.balance = Math.max(0, s.wallet.balance - amount)
+        s.wallet.totalWithdrawn += amount
         const effectiveApy = s.wallet.activeBoost?.boostPercentage ?? s.wallet.baseAPY
         const cappedBalance = s.wallet.activeBoost ? Math.min(s.wallet.balance, s.wallet.activeBoost.depositCap) : s.wallet.balance
         s.wallet.yieldRatePerSecond = (cappedBalance * (effectiveApy / 100)) / 31536000
@@ -394,15 +397,18 @@ export const useAppStore = create<AppState & AppActions>()(
 
     setBoostFromChain: ({ balance, activeBoost }) =>
       set((s) => {
-        // Only update balance if meaningful change (avoid overriding optimistic UI mid-tx)
-        const diff = Math.abs(s.wallet.balance - balance)
-        if (diff > 0.01) s.wallet.balance = balance
+        // Subtract cumulative local withdrawals from on-chain balance
+        // (deployer can't burn from user wallet on testnet, so on-chain balance stays high)
+        const adjustedBalance = Math.max(0, balance - s.wallet.totalWithdrawn)
+
+        const diff = Math.abs(s.wallet.balance - adjustedBalance)
+        if (diff > 0.01) s.wallet.balance = adjustedBalance
 
         s.wallet.activeBoost = activeBoost
 
         // Recalculate yield rate from boost's APY (boostPercentage IS the total effective APY)
         const effectiveApy = activeBoost?.boostPercentage ?? s.wallet.baseAPY
-        const cappedBalance = activeBoost ? Math.min(balance, activeBoost.depositCap) : balance
+        const cappedBalance = activeBoost ? Math.min(adjustedBalance, activeBoost.depositCap) : adjustedBalance
         s.wallet.yieldRatePerSecond = (cappedBalance * (effectiveApy / 100)) / 31536000
       }),
 
