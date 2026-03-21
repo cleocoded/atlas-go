@@ -2,9 +2,10 @@ export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getMinterSigner, getEmblemContract, getIncentivePoolContract, locationIdToBytes32 } from '@/lib/flowEvm'
+import { RARITY_CONFIG, type RarityTier } from '@/types'
 
 // Rarity enum: 0=special, 1=rare, 2=epic, 3=legendary, 4=mythical
-const RARITY_NAMES = ['special', 'rare', 'epic', 'legendary', 'mythical'] as const
+const RARITY_NAMES: RarityTier[] = ['special', 'rare', 'epic', 'legendary', 'mythical']
 
 // Location registry — in production this comes from a DB / admin CMS
 const LOCATION_REGISTRY: Record<string, {
@@ -58,12 +59,15 @@ export async function POST(req: NextRequest) {
       // Contracts not deployed yet — return a mock success with random rarity
       console.warn('[claim] Contracts not configured — returning mock success')
       const mockRarity = Math.floor(Math.random() * 5) as 0 | 1 | 2 | 3 | 4
+      const mockRarityName = RARITY_NAMES[mockRarity]
+      const mockCfg = RARITY_CONFIG[mockRarityName]
       return NextResponse.json({
         success: true,
         tokenId: `mock-${Date.now()}`,
         txHash: `0x${'0'.repeat(64)}`,
-        rarity: mockRarity,
-        rarityName: RARITY_NAMES[mockRarity],
+        rarity: mockRarityName,
+        boostPercentage: mockCfg.boostAPY,
+        depositCap: mockCfg.depositCap,
         mock: true,
       })
     }
@@ -98,20 +102,27 @@ export async function POST(req: NextRequest) {
     )
     const revealReceipt = await revealTx.wait()
 
-    // Parse tokenId and rarity from the return value / event
+    // Parse tokenId and rarity from the EmblemClaimed event
+    // Event args order: claimer(indexed), tokenId(indexed), locationId(indexed), rarity, boostAPY, depositCap, expiresAt
     const emblemIface = emblemContract.interface
     let tokenId = '0'
-    let rarity: number = 0
+    let rarityIndex: number = 0
+    let boostAPY: number = 5
+    let depositCap: number = 10000
     for (const log of revealReceipt.logs) {
       try {
         const parsed = emblemIface.parseLog({ topics: log.topics, data: log.data })
         if (parsed?.name === 'EmblemClaimed') {
-          tokenId = parsed.args[1].toString()
-          rarity = Number(parsed.args[2])
+          tokenId = parsed.args[1].toString()       // tokenId (indexed)
+          rarityIndex = Number(parsed.args[3])       // rarity (non-indexed, after 3 indexed)
+          boostAPY = Number(parsed.args[4])           // boostAPY
+          depositCap = Number(parsed.args[5]) / 1e6   // depositCap (convert from 6 decimals to USD)
           break
         }
       } catch { /* skip unrelated logs */ }
     }
+
+    const rarityName = RARITY_NAMES[rarityIndex] ?? 'special'
 
     // ── Step 3: Activate boost in IncentivePool ────────────────────────────
 
@@ -120,7 +131,7 @@ export async function POST(req: NextRequest) {
       const boostTx = await incentivePool.activateBoost(
         walletAddress,
         tokenId,
-        rarity,
+        rarityIndex,
         { gasLimit: 300_000 }
       )
       await boostTx.wait()
@@ -130,8 +141,9 @@ export async function POST(req: NextRequest) {
       success: true,
       tokenId,
       txHash: revealReceipt.hash,
-      rarity,
-      rarityName: RARITY_NAMES[rarity] ?? 'special',
+      rarity: rarityName,
+      boostPercentage: boostAPY,
+      depositCap,
     })
   } catch (err) {
     console.error('[claim] Error:', err)

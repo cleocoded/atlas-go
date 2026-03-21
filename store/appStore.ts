@@ -229,9 +229,9 @@ export const useAppStore = create<AppState & AppActions>()(
       }
 
       // Fallback defaults when no API result (e.g. dev/offline mode)
-      const rarity = apiResult?.rarity ?? 'common'
-      const boostPercentage = apiResult?.boostPercentage ?? 100
-      const depositCap = apiResult?.depositCap ?? 1000
+      const rarity = apiResult?.rarity ?? 'special'
+      const boostPercentage = apiResult?.boostPercentage ?? 5
+      const depositCap = apiResult?.depositCap ?? 10000
 
       const newEmblem: CollectedEmblem = {
         id: `emblem-${Date.now()}`,
