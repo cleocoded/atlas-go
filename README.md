@@ -2,7 +2,7 @@
 
 **Location-based DeFi on Flow.** Visit real-world locations, claim attendance emblems, and earn boosted yield on your USDC deposits.
 
-Atlas Go is built entirely on **Flow EVM** — leveraging Flow's native Cadence Arch precompile for verifiable on-chain randomness and low-cost transactions.
+Atlas Go is built entirely on **Flow** and leverages Flow's native Cadence Arch precompile for verifiable on-chain randomness.
 
 ## How It Works
 
@@ -42,7 +42,6 @@ Mythical is limited to one per location. Rarity is determined at claim time usin
 - **Frontend:** Next.js 14, Tailwind CSS, TypeScript
 - **Auth & Wallet:** Privy (embedded EVM wallet, gasless transactions)
 - **Map:** Mapbox GL JS v3
-- **Onramp:** Crossmint
 - **State:** Zustand + immer
 - **Stablecoin:** USDC
 - **Base Yield:** More Markets lending (MockLending on testnet), 2-3% APY
