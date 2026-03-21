@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
+import Image             from 'next/image'
 import { useAppStore }   from '@/store/appStore'
 import { RarityBadge }   from '@/components/ui/RarityBadge'
 import { Button }        from '@/components/ui/Button'
@@ -148,8 +149,16 @@ export function ClaimScreen() {
                 : undefined
             }
           >
-            {/* Artwork fallback */}
-            <div className="absolute inset-0 bg-gradient-to-br from-accent-secondary/30 to-accent-primary/30 flex items-center justify-center">
+            <Image
+              src={location.emblemArtwork}
+              alt={location.emblemArtTitle ?? location.name}
+              fill
+              className="object-cover"
+              sizes="240px"
+              priority
+            />
+            {/* Fallback gradient (shows behind image or if image fails) */}
+            <div className="absolute inset-0 -z-10 bg-gradient-to-br from-accent-secondary/30 to-accent-primary/30 flex items-center justify-center">
               <span className="text-7xl">✦</span>
             </div>
           </div>

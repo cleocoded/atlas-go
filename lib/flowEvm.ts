@@ -51,7 +51,7 @@ export const INCENTIVE_POOL_ABI = [
   'function claimBoostYield()',
 ]
 
-export const STGUSDС_ABI = [
+export const STGUSDC_ABI = [
   'function balanceOf(address) view returns (uint256)',
   'function decimals() view returns (uint8)',
 ]
@@ -75,9 +75,9 @@ export function getIncentivePoolContract(signerOrProvider?: ethers.Signer | ethe
 }
 
 export function getStgUsdcContract(signerOrProvider?: ethers.Signer | ethers.Provider) {
-  const addr = process.env.NEXT_PUBLIC_STGUSDС_ADDRESS
-  if (!addr) throw new Error('NEXT_PUBLIC_STGUSDС_ADDRESS not set')
-  return new ethers.Contract(addr, STGUSDС_ABI, signerOrProvider ?? getProvider())
+  const addr = process.env.NEXT_PUBLIC_STGUSDC_ADDRESS
+  if (!addr) throw new Error('NEXT_PUBLIC_STGUSDC_ADDRESS not set')
+  return new ethers.Contract(addr, STGUSDC_ABI, signerOrProvider ?? getProvider())
 }
 
 // Convert location string ID → bytes32

@@ -19,10 +19,15 @@ export function useOnChainSync() {
       const data = await res.json()
       if (data.error) return
 
-      // Sync deposit balance and boost state from chain
+      // Sync balance and boost state from chain
+      // Use depositBalance (MockLending) if user has deposited,
+      // otherwise fall back to stgUsdcWallet (EOA balance from faucet/onramp)
       if (typeof data.depositBalance === 'number') {
+        const onChainBalance = data.depositBalance > 0
+          ? data.depositBalance
+          : (data.stgUsdcWallet ?? 0)
         setBoostFromChain({
-          balance:     data.depositBalance,
+          balance:     onChainBalance,
           activeBoost: data.activeBoost ?? null,
         })
       }

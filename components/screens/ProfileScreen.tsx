@@ -14,6 +14,7 @@ export function ProfileScreen() {
   const navigate     = useAppStore((s) => s.navigate)
   const connectWallet = useAppStore((s) => s.connectWallet)
   const disconnectWallet = useAppStore((s) => s.disconnectWallet)
+  const showToast    = useAppStore((s) => s.showToast)
   const { login, logout, authenticated, user: privyUser } = usePrivy()
 
   const [editing, setEditing]   = useState(false)
@@ -78,9 +79,15 @@ export function ProfileScreen() {
 
         {/* Wallet address */}
         {wallet.address ? (
-          <p className="text-center text-body-md text-text-tertiary font-mono mb-6">
+          <button
+            className="block mx-auto text-body-md text-text-tertiary font-mono mb-6 active:opacity-70"
+            onClick={() => {
+              navigator.clipboard.writeText(wallet.address!)
+              showToast('Address copied to clipboard', 'success')
+            }}
+          >
             {formatAddress(wallet.address)}
-          </p>
+          </button>
         ) : (
           <p className="text-center text-body-md text-text-tertiary mb-6">No wallet connected</p>
         )}

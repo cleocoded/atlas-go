@@ -1,0 +1,12 @@
+{
+  "name": "Marina Bay Nights",
+  "description": "An Atlas Go emblem earned by visiting Marina Bay Sands in Singapore. This collectible NFT unlocks a temporary yield boost on stgUSDC deposits.",
+  "image": "/emblems/emblem-1-transparent.png",
+  "external_url": "https://atlasgo.app",
+  "attributes": [
+    { "trait_type": "Location", "value": "Marina Bay Sands" },
+    { "trait_type": "City", "value": "Singapore" },
+    { "trait_type": "Partner", "value": "PayPal" },
+    { "trait_type": "Collection", "value": "Atlas Go Emblems" }
+  ]
+}

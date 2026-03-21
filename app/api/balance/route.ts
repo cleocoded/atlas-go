@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
 
     // stgUSDC wallet balance (user's EOA, not deposited)
     let stgUsdcWallet = 0
-    if (process.env.NEXT_PUBLIC_STGUSDС_ADDRESS) {
+    if (process.env.NEXT_PUBLIC_STGUSDC_ADDRESS) {
       const stgUsdc = getStgUsdcContract(provider)
       const [rawBal, decimals] = await Promise.all([
         stgUsdc.balanceOf(address),

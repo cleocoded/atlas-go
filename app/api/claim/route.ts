@@ -9,10 +9,10 @@ const RARITY_NAMES: RarityTier[] = ['special', 'rare', 'epic', 'legendary', 'myt
 
 // Location metadata URIs — in production this comes from a DB / admin CMS
 const LOCATION_METADATA: Record<string, string> = {
-  'loc-paypal-sf':       'ipfs://QmPlaceholder/paypal-sf.json',
-  'loc-flow-hq':         'ipfs://QmPlaceholder/flow-hq.json',
-  'loc-paypal-downtown': 'ipfs://QmPlaceholder/paypal-downtown.json',
-  'loc-flow-events':     'ipfs://QmPlaceholder/flow-events.json',
+  'loc-marina-bay': 'ipfs://QmPlaceholder/marina-bay.json',
+  'loc-supertree':  'ipfs://QmPlaceholder/supertree.json',
+  'loc-merlion':    'ipfs://QmPlaceholder/merlion.json',
+  'loc-cafe':       'ipfs://QmPlaceholder/cafe.json',
 }
 
 /** Get metadata URI for a location (fallback for dynamic/nearby locations) */

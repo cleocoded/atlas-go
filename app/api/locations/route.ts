@@ -21,55 +21,63 @@ interface LocationData {
 
 const SINGAPORE_LOCATIONS: LocationData[] = [
   {
-    id: 'loc-paypal-sf',
-    name: 'PayPal Innovation Lab',
+    id: 'loc-marina-bay',
+    name: 'Marina Bay Sands',
     partnerName: 'PayPal',
     partnerLogo: '/logos/paypal.svg',
-    coordinates: { lat: 1.3007, lng: 103.8591 },
-    emblemArtwork: '/emblems/paypal-sf.svg',
-    emblemArtTitle: 'Golden Gate Sunrise',
+    coordinates: { lat: 1.2834, lng: 103.8607 },
+    emblemArtwork: '/emblems/emblem-1-transparent.png',
+    emblemArtTitle: 'Marina Bay Nights',
     isActive: true,
     mythicalClaimed: false,
   },
   {
-    id: 'loc-flow-hq',
-    name: 'Flow Foundation HQ',
+    id: 'loc-supertree',
+    name: 'Supertree Grove',
     partnerName: 'Flow',
     partnerLogo: '/logos/flow.svg',
-    coordinates: { lat: 1.3025, lng: 103.8565 },
-    emblemArtwork: '/emblems/flow-hq.svg',
-    emblemArtTitle: 'Bay Bridge Blaze',
+    coordinates: { lat: 1.2816, lng: 103.8636 },
+    emblemArtwork: '/emblems/emblem-2-transparent.png',
+    emblemArtTitle: 'Garden of Light',
     isActive: true,
     mythicalClaimed: false,
   },
   {
-    id: 'loc-paypal-downtown',
-    name: 'PayPal Downtown',
+    id: 'loc-merlion',
+    name: 'Merlion Park',
     partnerName: 'PayPal',
     partnerLogo: '/logos/paypal.svg',
-    coordinates: { lat: 1.2994, lng: 103.8555 },
-    emblemArtwork: '/emblems/paypal-downtown.svg',
-    emblemArtTitle: null,
+    coordinates: { lat: 1.2868, lng: 103.8545 },
+    emblemArtwork: '/emblems/emblem-3-transparent.png',
+    emblemArtTitle: 'Guardian of the Bay',
     isActive: true,
     mythicalClaimed: false,
   },
   {
-    id: 'loc-flow-events',
-    name: 'Flow Hackathon Space',
+    id: 'loc-cafe',
+    name: 'Flow Cafe',
     partnerName: 'Flow',
     partnerLogo: '/logos/flow.svg',
-    coordinates: { lat: 1.3018, lng: 103.8612 },
-    emblemArtwork: '/emblems/flow-events.svg',
-    emblemArtTitle: 'Sunset District Badge',
+    coordinates: { lat: 1.2850, lng: 103.8570 },
+    emblemArtwork: '/emblems/emblem-4-transparent.png',
+    emblemArtTitle: 'Cozy Corner',
     isActive: true,
     mythicalClaimed: false,
   },
 ]
 
+// Emblem artwork pool — nearby locations cycle through these
+const EMBLEM_ARTWORK_POOL = [
+  '/emblems/emblem-5-transparent.png',
+  '/emblems/emblem-4-transparent.png',
+  '/emblems/emblem-2-transparent.png',
+  '/emblems/emblem-1-transparent.png',
+]
+
 /** Generate demo locations near a given position */
 function generateNearbyLocations(lat: number, lng: number): LocationData[] {
   const nearby = [
-    { dlat: 0.0003, dlng: 0.0004, name: 'Flow Cafe', title: 'Local Explorer' },
+    { dlat: 0.0003, dlng: 0.0004, name: 'Local Bakery', title: 'Sweet Discovery' },
     { dlat: -0.0005, dlng: 0.0002, name: 'Flow Pop-Up', title: 'Street Discovery' },
     { dlat: 0.0002, dlng: -0.0006, name: 'Flow Lounge', title: 'Neighborhood Badge' },
     { dlat: -0.0008, dlng: -0.0003, name: 'Flow Gallery', title: 'Art District Pass' },
@@ -81,7 +89,7 @@ function generateNearbyLocations(lat: number, lng: number): LocationData[] {
     partnerName: 'Flow',
     partnerLogo: '/logos/flow.svg',
     coordinates: { lat: lat + n.dlat, lng: lng + n.dlng },
-    emblemArtwork: '/emblems/flow-hq.svg',
+    emblemArtwork: EMBLEM_ARTWORK_POOL[i % EMBLEM_ARTWORK_POOL.length],
     emblemArtTitle: n.title,
     isActive: true,
     mythicalClaimed: false,
@@ -90,7 +98,7 @@ function generateNearbyLocations(lat: number, lng: number): LocationData[] {
 
 /** Check if a position is near the Singapore demo cluster */
 function isNearSingapore(lat: number, lng: number): boolean {
-  return Math.abs(lat - 1.3010) < 0.05 && Math.abs(lng - 103.858) < 0.05
+  return Math.abs(lat - 1.2842) < 0.05 && Math.abs(lng - 103.859) < 0.05
 }
 
 export async function GET(request: NextRequest) {

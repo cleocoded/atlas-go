@@ -55,7 +55,7 @@ async function main() {
   console.log("Funded MockLending with 10,000 stgUSDC yield reserve");
 
   console.log("\n── Add to .env ──────────────────────────────────────────");
-  console.log(`NEXT_PUBLIC_STGUSDС_ADDRESS=${stgUSDCAddr}`);
+  console.log(`NEXT_PUBLIC_STGUSDC_ADDRESS=${stgUSDCAddr}`);
   console.log(`NEXT_PUBLIC_EMBLEM_CONTRACT=${emblemAddr}`);
   console.log(`NEXT_PUBLIC_LENDING_CONTRACT=${lendingAddr}`);
   console.log(`NEXT_PUBLIC_INCENTIVE_POOL_CONTRACT=${poolAddr}`);
