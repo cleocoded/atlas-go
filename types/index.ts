@@ -65,6 +65,7 @@ export interface Location {
 
 export interface CollectedEmblem {
   id: string
+  tokenId: string | null   // on-chain ERC-721 token ID (null in demo/offline mode)
   locationId: string
   locationName: string
   partnerName: string

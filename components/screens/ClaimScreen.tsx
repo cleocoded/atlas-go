@@ -23,6 +23,7 @@ export function ClaimScreen() {
   const [spinning, setSpinning] = useState(false)
   const [showFlash, setShowFlash] = useState(false)
   const [revealedRarity, setRevealedRarity] = useState<RarityTier | null>(null)
+  const [claimedTokenId, setClaimedTokenId] = useState<string | null>(null)
   const claimDebounceRef = useRef(false)
 
   // Close on escape
@@ -67,6 +68,7 @@ export function ClaimScreen() {
       // Extract rarity from claim result
       const rarity = (result?.rarity ?? 'special') as RarityTier
       setRevealedRarity(rarity)
+      setClaimedTokenId(result?.tokenId ?? null)
 
       // Mythical: rainbow burst + screen flash
       if (rarity === 'mythical') {
@@ -217,11 +219,10 @@ export function ClaimScreen() {
                 </div>
                 <div className="mt-3">
                   <ShareButton
-                    emblem={{
-                      rarity: revealedRarity!,
-                      locationName: location.name,
-                      boostPercentage: rarityConfig.boostAPY,
-                    }}
+                    tokenId={claimedTokenId}
+                    rarity={revealedRarity!}
+                    locationName={location.name}
+                    boostPercentage={rarityConfig.boostAPY}
                   />
                 </div>
               </>

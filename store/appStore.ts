@@ -114,7 +114,7 @@ interface AppActions {
   // Claim flow
   openClaim: (locationId: string) => void
   closeClaim: () => void
-  claimEmblem: (locationId: string, claimResult?: { rarity: string; boostPercentage: number; depositCap: number }) => Promise<{ rarity: string; boostPercentage: number; depositCap: number } | undefined>
+  claimEmblem: (locationId: string, claimResult?: { rarity: string; boostPercentage: number; depositCap: number; tokenId?: string | null }) => Promise<{ rarity: string; boostPercentage: number; depositCap: number; tokenId: string | null } | undefined>
 
   // Collection
   setFilter: (filter: CollectionFilter) => void
@@ -224,7 +224,7 @@ export const useAppStore = create<AppState & AppActions>()(
         const data = await res.json()
         if (!res.ok && res.status !== 409) throw new Error(data.error ?? 'Claim failed')
         // 409 = already claimed on-chain — still add to local collection
-        apiResult = { rarity: data.rarity, boostPercentage: data.boostPercentage, depositCap: data.depositCap }
+        apiResult = { rarity: data.rarity, boostPercentage: data.boostPercentage, depositCap: data.depositCap, tokenId: data.tokenId ?? null }
       } else if (!walletAddress) {
         // No wallet connected — Privy will create one silently; delay for UX
         await new Promise((r) => setTimeout(r, 2000))
@@ -237,6 +237,7 @@ export const useAppStore = create<AppState & AppActions>()(
 
       const newEmblem: CollectedEmblem = {
         id: `emblem-${Date.now()}`,
+        tokenId: apiResult?.tokenId ?? null,
         locationId,
         locationName: location.name,
         partnerName: location.partnerName,
@@ -290,7 +291,7 @@ export const useAppStore = create<AppState & AppActions>()(
       get().addActivity({ type: 'boost_activated', description: `Boost activated: +${boostPercentage}% APY for ${BOOST_DURATION_HOURS}h`, amount: null })
       get().showToast(`Claimed! +${boostPercentage}% APY boost activated`, 'success')
 
-      return { rarity, boostPercentage, depositCap }
+      return { rarity, boostPercentage, depositCap, tokenId: apiResult?.tokenId ?? null }
     },
 
     // ── Collection ──────────────────────────────────────────────────────────

@@ -44,7 +44,13 @@ export function EmblemDetailScreen() {
 
       {/* Floating share + hide/unhide buttons */}
       <div className="absolute top-0 right-0 z-10 p-3 flex gap-2">
-        <ShareButton emblem={emblem} variant="icon" />
+        <ShareButton
+          tokenId={emblem.tokenId}
+          rarity={emblem.rarity}
+          locationName={emblem.locationName}
+          boostPercentage={emblem.boostPercentage}
+          variant="icon"
+        />
         <button
           onClick={() => emblem.isHidden ? unhideEmblem(emblem.id) : hideEmblem(emblem.id)}
           className="h-10 px-4 flex items-center justify-center rounded-full bg-bg-card/60 backdrop-blur-sm text-text-tertiary text-body-sm font-medium active:scale-95 transition-all active:text-text-primary"

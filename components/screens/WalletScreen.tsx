@@ -5,51 +5,109 @@ import { useAppStore }  from '@/store/appStore'
 import { YieldCounter } from '@/components/ui/YieldCounter'
 import { Button }       from '@/components/ui/Button'
 import { formatCurrency, formatCountdown } from '@/types'
+import { QRCodeSVG } from 'qrcode.react'
 
-function DepositWithdrawModal({
-  mode,
-  onClose,
-}: {
-  mode: 'deposit' | 'withdraw'
-  onClose: () => void
-}) {
+function DepositModal({ onClose }: { onClose: () => void }) {
+  const address = useAppStore((s) => s.wallet.address)
+  const showToast = useAppStore((s) => s.showToast)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    if (!address) return
+    await navigator.clipboard.writeText(address)
+    setCopied(true)
+    showToast('Address copied!', 'success')
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="fixed inset-0 z-[30] bg-black/70 flex items-end justify-center" onClick={onClose}>
+      <div className="bg-bg-card w-full max-w-mobile rounded-t-card p-6 pb-safe shadow-elevated" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-heading font-bold text-text-primary mb-2">Deposit USDC</h3>
+        <p className="text-body-sm text-text-tertiary mb-5">
+          Send USDC on Flow EVM Testnet to this address
+        </p>
+
+        {address && (
+          <div className="flex flex-col items-center gap-4 mb-5">
+            <div className="bg-white p-3 rounded-[14px]">
+              <QRCodeSVG value={address} size={180} />
+            </div>
+            <button
+              onClick={handleCopy}
+              className="w-full bg-bg-elevated rounded-[12px] px-4 py-3 flex items-center gap-2 active:scale-[0.98] transition-transform"
+            >
+              <span className="text-body-sm text-text-secondary break-all flex-1 text-left font-mono">
+                {address}
+              </span>
+              <span className="text-accent-primary text-body-sm font-semibold whitespace-nowrap">
+                {copied ? 'Copied!' : 'Copy'}
+              </span>
+            </button>
+          </div>
+        )}
+
+        <Button variant="ghost" size="md" fullWidth onClick={onClose}>Done</Button>
+      </div>
+    </div>
+  )
+}
+
+function WithdrawModal({ onClose }: { onClose: () => void }) {
   const [amount, setAmount] = useState('')
-  const deposit  = useAppStore((s) => s.deposit)
-  const withdraw = useAppStore((s) => s.withdraw)
+  const [toAddress, setToAddress] = useState('')
   const balance  = useAppStore((s) => s.wallet.balance)
+  const withdraw = useAppStore((s) => s.withdraw)
+  const showToast = useAppStore((s) => s.showToast)
 
   const handleSubmit = () => {
     const val = parseFloat(amount)
     if (isNaN(val) || val <= 0) return
-    if (mode === 'deposit')  deposit(val)
-    if (mode === 'withdraw') withdraw(Math.min(val, balance))
+    if (!toAddress.startsWith('0x') || toAddress.length < 42) {
+      showToast('Enter a valid wallet address', 'error')
+      return
+    }
+    withdraw(Math.min(val, balance))
+    showToast(`Withdrawal of ${formatCurrency(val)} initiated`, 'success')
     onClose()
   }
 
   return (
-    <div className="fixed inset-0 z-[30] bg-black/70 flex items-end justify-center">
-      <div className="bg-bg-card w-full max-w-mobile rounded-t-card p-6 pb-safe shadow-elevated">
-        <h3 className="text-heading font-bold text-text-primary mb-4 capitalize">{mode} stgUSDC</h3>
+    <div className="fixed inset-0 z-[30] bg-black/70 flex items-end justify-center" onClick={onClose}>
+      <div className="bg-bg-card w-full max-w-mobile rounded-t-card p-6 pb-safe shadow-elevated" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-heading font-bold text-text-primary mb-2">Withdraw USDC</h3>
+        <p className="text-body-sm text-text-tertiary mb-5">
+          Send USDC to an external wallet
+        </p>
+
         <div className="mb-4">
-          <label className="text-body-md text-text-secondary block mb-2">Amount (USD)</label>
+          <label className="text-body-sm text-text-secondary block mb-1.5">Amount</label>
           <input
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
-            className="w-full h-12 bg-bg-elevated rounded-input px-4 text-text-primary text-body-lg outline-none border border-border-default focus:border-accent-primary transition-colors"
+            className="w-full h-12 bg-bg-elevated rounded-[12px] px-4 text-text-primary text-body-lg outline-none border border-border-default focus:border-accent-primary transition-colors"
           />
-          {mode === 'withdraw' && (
-            <p className="text-body-sm text-text-tertiary mt-1">
-              Available: {formatCurrency(balance)}
-            </p>
-          )}
+          <p className="text-body-sm text-text-tertiary mt-1">
+            Available: {formatCurrency(balance)}
+          </p>
         </div>
+
+        <div className="mb-5">
+          <label className="text-body-sm text-text-secondary block mb-1.5">Destination address</label>
+          <input
+            type="text"
+            value={toAddress}
+            onChange={(e) => setToAddress(e.target.value)}
+            placeholder="0x..."
+            className="w-full h-12 bg-bg-elevated rounded-[12px] px-4 text-text-primary text-body-md font-mono outline-none border border-border-default focus:border-accent-primary transition-colors"
+          />
+        </div>
+
         <div className="flex gap-3">
           <Button variant="ghost" size="md" fullWidth onClick={onClose}>Cancel</Button>
-          <Button variant="primary" size="md" fullWidth onClick={handleSubmit}>
-            {mode === 'deposit' ? 'Deposit' : 'Withdraw'}
-          </Button>
+          <Button variant="primary" size="md" fullWidth onClick={handleSubmit}>Withdraw</Button>
         </div>
       </div>
     </div>
@@ -80,7 +138,7 @@ export function WalletScreen() {
       const data = await res.json()
       if (data.success) {
         deposit(10000)
-        showToast('$10,000 demo stgUSDC received!', 'success')
+        showToast('$10,000 demo USDC received!', 'success')
       } else {
         showToast(data.error ?? 'Faucet failed', 'error')
       }
@@ -137,24 +195,14 @@ export function WalletScreen() {
                 : 'border-border-default/40 active:bg-bg-card'
             }`}
           >
-            <div className="flex items-center justify-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-accent-boost">
-                <path d="M12 5v14M5 12h14"/>
-              </svg>
-              Deposit
-            </div>
+            Deposit
           </button>
           <button
             onClick={() => setModal('withdraw')}
             disabled={!wallet.isConnected}
             className="flex-1 h-12 rounded-[14px] bg-bg-card/50 border border-border-default/40 text-label text-text-primary font-semibold active:scale-[0.97] active:bg-bg-card transition-all disabled:opacity-40 disabled:pointer-events-none"
           >
-            <div className="flex items-center justify-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-text-tertiary">
-                <path d="M5 12h14"/>
-              </svg>
-              Withdraw
-            </div>
+            Withdraw
           </button>
         </div>
 
@@ -168,7 +216,7 @@ export function WalletScreen() {
             >
               {faucetLoading ? 'Sending...' : 'Get $10,000 Demo Funds'}
             </button>
-            <p className="text-body-sm text-text-disabled text-center mt-1.5">Testnet stgUSDC for testing</p>
+            <p className="text-body-sm text-text-disabled text-center mt-1.5">Testnet USDC for testing</p>
           </div>
         )}
 
@@ -281,9 +329,8 @@ export function WalletScreen() {
         <div className="h-6" />
       </div>
 
-      {modal && (
-        <DepositWithdrawModal mode={modal} onClose={() => setModal(null)} />
-      )}
+      {modal === 'deposit' && <DepositModal onClose={() => setModal(null)} />}
+      {modal === 'withdraw' && <WithdrawModal onClose={() => setModal(null)} />}
     </div>
   )
 }

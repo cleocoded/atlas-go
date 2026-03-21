@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Image         from 'next/image'
 import { usePrivy }     from '@privy-io/react-auth'
 import { useAppStore }  from '@/store/appStore'
+import { ShareProfileButton } from '@/components/ui/ShareButton'
 import { formatAddress, formatCurrency } from '@/types'
 
 export function ProfileScreen() {
@@ -150,6 +151,7 @@ export function ProfileScreen() {
 
         {/* Menu-style actions */}
         <div className="px-5 space-y-1.5 mb-6">
+          {wallet.address && <ShareProfileButton address={wallet.address} />}
           <button
             onClick={() => navigate('avatar-select')}
             className="w-full flex items-center gap-3 px-4 py-3.5 rounded-[14px] bg-bg-card/50 border border-border-default/40 active:bg-bg-card active:border-border-default transition-colors"

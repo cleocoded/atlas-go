@@ -104,6 +104,7 @@ export async function GET(req: NextRequest) {
               const now = Math.floor(Date.now() / 1000)
               return {
                 id: `emblem-${tokenId.toString()}`,
+                tokenId: tokenId.toString(),
                 locationId: locId,
                 locationName: info?.name ?? locId,
                 partnerName: info?.partner ?? 'Flow',
