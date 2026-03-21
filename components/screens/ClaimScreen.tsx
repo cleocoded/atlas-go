@@ -4,6 +4,7 @@ import Image             from 'next/image'
 import { useAppStore }   from '@/store/appStore'
 import { RarityBadge }   from '@/components/ui/RarityBadge'
 import { Button }        from '@/components/ui/Button'
+import { ShareButton }  from '@/components/ui/ShareButton'
 import { ClaimState, RarityTier, RARITY_CONFIG, formatCurrency, formatCountdown } from '@/types'
 
 export function ClaimScreen() {
@@ -33,7 +34,6 @@ export function ClaimScreen() {
     return () => window.removeEventListener('keydown', handler)
   }, [claimState, closeClaim])
 
-  console.log('[ClaimScreen] locationId:', locationId, 'location found:', !!location, 'locations count:', locations.length)
   if (!location) return null
 
   const handleClaimTap = () => {
@@ -214,6 +214,15 @@ export function ClaimScreen() {
                 </p>
                 <div className="mt-2">
                   <RarityBadge rarity={revealedRarity!} />
+                </div>
+                <div className="mt-3">
+                  <ShareButton
+                    emblem={{
+                      rarity: revealedRarity!,
+                      locationName: location.name,
+                      boostPercentage: rarityConfig.boostAPY,
+                    }}
+                  />
                 </div>
               </>
             )}

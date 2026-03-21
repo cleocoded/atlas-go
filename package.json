@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@crossmint/client-sdk-react-ui": "^1.4.0",
     "@privy-io/react-auth": "^1.86.0",
     "ethers": "^6.13.2",
     "immer": "^11.1.4",

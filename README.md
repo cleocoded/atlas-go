@@ -55,7 +55,7 @@ npm install
 
 # Copy environment variables
 cp .env.example .env.local
-# Fill in your Privy, Mapbox, and Crossmint keys
+# Fill in your Privy and Mapbox keys
 
 # Run development server
 npm run dev
