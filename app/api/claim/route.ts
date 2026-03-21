@@ -7,17 +7,9 @@ import { RARITY_CONFIG, type RarityTier } from '@/types'
 // Rarity enum: 0=special, 1=rare, 2=epic, 3=legendary, 4=mythical
 const RARITY_NAMES: RarityTier[] = ['special', 'rare', 'epic', 'legendary', 'mythical']
 
-// Location metadata URIs — in production this comes from a DB / admin CMS
-const LOCATION_METADATA: Record<string, string> = {
-  'loc-marina-bay': 'ipfs://QmPlaceholder/marina-bay.json',
-  'loc-supertree':  'ipfs://QmPlaceholder/supertree.json',
-  'loc-merlion':    'ipfs://QmPlaceholder/merlion.json',
-  'loc-cafe':       'ipfs://QmPlaceholder/cafe.json',
-}
-
-/** Get metadata URI for a location (fallback for dynamic/nearby locations) */
-function getMetadataUri(locationId: string): string {
-  return LOCATION_METADATA[locationId] ?? `ipfs://QmPlaceholder/${locationId}.json`
+/** Build metadata URI from the request origin — resolves to /metadata/<locationId>.json */
+function getMetadataUri(locationId: string, origin: string): string {
+  return `${origin}/metadata/${locationId}.json`
 }
 
 /**
@@ -43,7 +35,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'locationId required' }, { status: 400 })
     }
 
-    const metadataUri = getMetadataUri(locationId)
+    const origin = req.nextUrl.origin
+    const metadataUri = getMetadataUri(locationId, origin)
 
     // ── Check env ────────────────────────────────────────────────────────────
 
