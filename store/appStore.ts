@@ -130,6 +130,7 @@ interface AppActions {
   tickYield: () => void
   checkBoostExpiry: () => void
   setBoostFromChain: (data: { balance: number; activeBoost: ActiveBoost | null }) => void
+  setEmblemsFromChain: (emblems: CollectedEmblem[]) => void
 
   // Profile
   setUsername: (name: string) => void
@@ -221,7 +222,8 @@ export const useAppStore = create<AppState & AppActions>()(
           body: JSON.stringify({ walletAddress, locationId }),
         })
         const data = await res.json()
-        if (!res.ok) throw new Error(data.error ?? 'Claim failed')
+        if (!res.ok && res.status !== 409) throw new Error(data.error ?? 'Claim failed')
+        // 409 = already claimed on-chain — still add to local collection
         apiResult = { rarity: data.rarity, boostPercentage: data.boostPercentage, depositCap: data.depositCap }
       } else if (!walletAddress) {
         // No wallet connected — Privy will create one silently; delay for UX
@@ -403,6 +405,22 @@ export const useAppStore = create<AppState & AppActions>()(
         s.wallet.yieldRatePerSecond = (cappedBalance * (effectiveApy / 100)) / 31536000
       }),
 
+    setEmblemsFromChain: (emblems) =>
+      set((s) => {
+        // Replace collection with on-chain data (source of truth)
+        // Preserve local-only fields (isHidden) by merging
+        const hiddenSet = new Set(
+          s.collectedEmblems.filter((e) => e.isHidden).map((e) => e.id)
+        )
+        s.collectedEmblems = emblems.map((e) => ({
+          ...e,
+          isHidden: hiddenSet.has(e.id),
+          depositAtClaim: 0,
+          expectedEarnings: 0,
+        }))
+        s.user.totalEmblemsClaimed = emblems.length
+      }),
+
     // ── Profile ─────────────────────────────────────────────────────────────
 
     setUsername: (name) => set((s) => { s.user.username = name }),
@@ -473,6 +491,15 @@ export const useAppStore = create<AppState & AppActions>()(
 
 export const selectClaimedLocationIds = (state: AppState) =>
   new Set(state.collectedEmblems.map((p) => p.locationId))
+
+/** Maps locationId → artwork path for claimed emblems (used by map markers) */
+export const selectClaimedEmblemArtwork = (state: AppState) => {
+  const map = new Map<string, string>()
+  for (const e of state.collectedEmblems) {
+    map.set(e.locationId, e.artwork)
+  }
+  return map
+}
 
 export const selectFilteredEmblems = (state: AppState) => {
   const { collectedEmblems, selectedFilter } = state

@@ -3,7 +3,7 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { Location, MarkerState, haversineDistance } from '@/types'
-import { useAppStore, selectClaimedLocationIds } from '@/store/appStore'
+import { useAppStore, selectClaimedLocationIds, selectClaimedEmblemArtwork } from '@/store/appStore'
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? ''
 
@@ -16,25 +16,45 @@ function getMarkerColor(state: MarkerState): string {
   return '#FFB84D' // accent gold for in-range / claimed
 }
 
-function createMarkerEl(state: MarkerState): HTMLDivElement {
+function createMarkerEl(state: MarkerState, artworkUrl?: string): HTMLDivElement {
   const size = state === 'in-range' ? 48 : 40
   const el = document.createElement('div')
-  el.style.cssText = `
-    width: ${size}px;
-    height: ${size}px;
-    border-radius: 50%;
-    background: ${getMarkerColor(state)};
-    border: ${state === 'claimed' ? '2px solid #FFD700' : '2px solid rgba(255,255,255,0.2)'};
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 300ms ease-out, opacity 300ms ease-out;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-    ${state === 'in-range' ? 'animation: marker-pulse 1.5s ease-in-out infinite;' : ''}
-    ${state === 'claimed'  ? 'animation: gold-shimmer 3s linear infinite;' : ''}
-  `
-  el.innerHTML = `<span style="font-size:18px;">✦</span>`
+
+  if (state === 'claimed' && artworkUrl) {
+    // Claimed marker: show emblem artwork as circular image
+    el.style.cssText = `
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #FFD700;
+      cursor: pointer;
+      transition: transform 300ms ease-out;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 12px rgba(255,215,0,0.3);
+      animation: gold-shimmer 3s linear infinite;
+    `
+    const img = document.createElement('img')
+    img.src = artworkUrl
+    img.alt = 'Claimed emblem'
+    img.style.cssText = `width: 100%; height: 100%; object-fit: cover;`
+    el.appendChild(img)
+  } else {
+    el.style.cssText = `
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: 50%;
+      background: ${getMarkerColor(state)};
+      border: 2px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 300ms ease-out, opacity 300ms ease-out;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      ${state === 'in-range' ? 'animation: marker-pulse 1.5s ease-in-out infinite;' : ''}
+    `
+    el.innerHTML = `<span style="font-size:18px;">✦</span>`
+  }
   return el
 }
 
@@ -52,6 +72,7 @@ export function MapCanvas() {
   const openClaim       = useAppStore((s) => s.openClaim)
   const showToast       = useAppStore((s) => s.showToast)
   const claimedIds      = useAppStore(selectClaimedLocationIds)
+  const claimedArtwork  = useAppStore(selectClaimedEmblemArtwork)
   const gpsEnabled      = useAppStore((s) => s.gpsEnabled)
   const [userOffScreen, setUserOffScreen] = useState(false)
 
@@ -122,39 +143,34 @@ export function MapCanvas() {
         const dist = currentPosition
           ? haversineDistance(currentPosition, location.coordinates)
           : Infinity
-        console.log('[Marker]', location.name, 'dist:', Math.round(dist), 'm')
         const state: MarkerState = claimedIds.has(location.id)
           ? 'claimed'
           : dist <= 2000
           ? 'in-range'
           : 'out-of-range'
 
-        // Always store latest state so click handler reads current value
+        const artworkUrl = claimedArtwork.get(location.id)
+        const existing = markersRef.current.get(location.id)
+        const prevState = markerStateRef.current.get(location.id)
+
+        // Store latest state so click handler reads current value
         markerStateRef.current.set(location.id, state)
 
-        const existing = markersRef.current.get(location.id)
-        if (existing) {
-          // Update marker element in place
-          const el = existing.getElement()
-          const size = state === 'in-range' ? 48 : 40
-          el.style.width  = `${size}px`
-          el.style.height = `${size}px`
-          el.style.background = getMarkerColor(state)
-          el.style.border = state === 'claimed' ? '2px solid #FFD700' : '2px solid rgba(255,255,255,0.2)'
-          el.style.animation = state === 'in-range'
-            ? 'marker-pulse 1.5s ease-in-out infinite'
-            : state === 'claimed'
-            ? 'gold-shimmer 3s linear infinite'
-            : 'none'
-        } else {
-          const el = createMarkerEl(state)
+        if (existing && state === prevState) {
+          // No state change — just update position if needed
+        } else if (existing) {
+          // State changed (e.g. unclaimed → claimed) — rebuild marker
+          existing.remove()
+          markersRef.current.delete(location.id)
+        }
+
+        if (!markersRef.current.has(location.id)) {
+          const el = createMarkerEl(state, artworkUrl)
 
           el.addEventListener('click', () => {
             const currentState = markerStateRef.current.get(location.id)
-            console.log('[Marker] Clicked', location.name, 'state:', currentState, 'id:', location.id)
             const store = useAppStore.getState()
             if (currentState === 'in-range') {
-              console.log('[Marker] Opening claim for', location.id, 'location exists in store:', !!store.locations.find(l => l.id === location.id))
               store.openClaim(location.id)
             } else if (currentState === 'claimed') {
               store.showToast('Already claimed this location!', 'info')
@@ -181,7 +197,7 @@ export function MapCanvas() {
     } else {
       map.once('load', updateMarkers)
     }
-  }, [locations, currentPosition, claimedIds, openClaim, showToast])
+  }, [locations, currentPosition, claimedIds, claimedArtwork, openClaim, showToast])
 
   // Geo-accurate range circle (scales with map zoom)
   useEffect(() => {
@@ -270,7 +286,6 @@ export function MapCanvas() {
       .addTo(map)
 
     userMarkerRef.current = marker
-    console.log('[UserMarker] Added to map at', lat, lng, 'avatar:', av)
   }, [])
 
   // Ensure user marker is alive — checks DOM attachment, recreates if needed
@@ -280,7 +295,6 @@ export function MapCanvas() {
       const detached = !el.parentElement || !el.isConnected
       const avatarChanged = userAvatarRef.current !== avatar
       if (detached || avatarChanged) {
-        console.log('[UserMarker] Recovering — detached:', detached, 'avatarChanged:', avatarChanged)
         userMarkerRef.current.remove()
         userMarkerRef.current = null
       }
@@ -299,7 +313,6 @@ export function MapCanvas() {
     const map = mapRef.current
     if (!map) return
     if (!currentPosition) {
-      console.log('[UserMarker] No position, removing marker')
       userMarkerRef.current?.remove()
       userMarkerRef.current = null
       return
@@ -320,7 +333,6 @@ export function MapCanvas() {
       if (userMarkerRef.current) {
         const el = userMarkerRef.current.getElement()
         if (!el.parentElement || !el.isConnected) {
-          console.log('[UserMarker] Health check: marker detached, recovering')
           userMarkerRef.current.remove()
           userMarkerRef.current = null
           const pos = useAppStore.getState().currentPosition
@@ -334,7 +346,6 @@ export function MapCanvas() {
 
     // Also recover after Mapbox style reload (can wipe DOM markers)
     const onStyleLoad = () => {
-      console.log('[UserMarker] Style reloaded, recovering marker')
       userMarkerRef.current?.remove()
       userMarkerRef.current = null
       const pos = useAppStore.getState().currentPosition

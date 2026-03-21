@@ -10,7 +10,8 @@ export function useOnChainSync() {
   const address       = useAppStore((s) => s.wallet.address)
   const isConnected   = useAppStore((s) => s.wallet.isConnected)
   const deposit       = useAppStore((s) => s.deposit)
-  const setBoostFromChain = useAppStore((s) => s.setBoostFromChain)
+  const setBoostFromChain   = useAppStore((s) => s.setBoostFromChain)
+  const setEmblemsFromChain = useAppStore((s) => s.setEmblemsFromChain)
   const intervalRef   = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const sync = async (addr: string) => {
@@ -30,6 +31,13 @@ export function useOnChainSync() {
           balance:     onChainBalance,
           activeBoost: data.activeBoost ?? null,
         })
+      }
+
+      // Sync claimed emblems from chain
+      console.log('[onChainSync] claimedEmblems from API:', data.claimedEmblems)
+      if (Array.isArray(data.claimedEmblems) && data.claimedEmblems.length > 0) {
+        console.log('[onChainSync] Setting emblems in store:', data.claimedEmblems.length)
+        setEmblemsFromChain(data.claimedEmblems)
       }
     } catch {
       // Silent — offline / contracts not deployed

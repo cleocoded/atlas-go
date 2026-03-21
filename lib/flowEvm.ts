@@ -29,6 +29,9 @@ export const EMBLEM_ABI = [
   'function revealClaim(address claimer, bytes32 locationId, string metadataUri) returns (uint256 tokenId, uint8 rarity)',
   'function hasClaimed(bytes32 locationId, address claimer) view returns (bool)',
   'function isMythicalClaimed(bytes32 locationId) view returns (bool)',
+  'function claimRecord(bytes32 locationId, address claimer) view returns (uint256)',
+  'function getEmblemMeta(uint256 tokenId) view returns (tuple(bytes32 locationId, uint8 rarity, uint16 boostAPY, uint256 depositCap, uint64 claimedAt, uint64 expiresAt))',
+  'function tokenURI(uint256 tokenId) view returns (string)',
   'event EmblemClaimed(address indexed claimer, uint256 indexed tokenId, bytes32 indexed locationId, uint8 rarity, uint16 boostAPY, uint256 depositCap, uint64 expiresAt)',
 ]
 

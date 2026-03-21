@@ -65,7 +65,29 @@ export async function POST(req: NextRequest) {
 
     const alreadyClaimed = await emblemContract.hasClaimed(locationBytes, walletAddress)
     if (alreadyClaimed) {
-      return NextResponse.json({ error: 'Already claimed this location' }, { status: 409 })
+      // Return existing claim data so the app can sync it locally
+      let rarity = 'special'
+      let boostPercentage = 5
+      let depositCap = 10000
+      try {
+        if (process.env.NEXT_PUBLIC_INCENTIVE_POOL_CONTRACT) {
+          const incentivePool = getIncentivePoolContract(signer)
+          const boostData = await incentivePool.getActiveBoost(walletAddress)
+          if (boostData.emblemTokenId !== BigInt(0)) {
+            const ri = Number(boostData.rarity)
+            rarity = RARITY_NAMES[ri] ?? 'special'
+            boostPercentage = Number(boostData.boostAPY)
+            depositCap = Number(boostData.depositCap) / 1e6
+          }
+        }
+      } catch { /* fall through with defaults */ }
+      return NextResponse.json({
+        error: 'Already claimed this location',
+        rarity,
+        boostPercentage,
+        depositCap,
+        alreadyClaimed: true,
+      }, { status: 409 })
     }
 
     // ── Step 1: Commit ─────────────────────────────────────────────────────
