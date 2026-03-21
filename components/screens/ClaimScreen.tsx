@@ -159,9 +159,9 @@ export function ClaimScreen() {
                 priority
               />
             ) : (
-              /* Mystery state — hidden until revealed */
-              <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] to-[#16213e] flex items-center justify-center">
-                <span className="text-7xl opacity-60">?</span>
+              /* Placeholder until revealed */
+              <div className="absolute inset-0 bg-gradient-to-br from-accent-secondary/30 to-accent-primary/30 flex items-center justify-center">
+                <span className="text-7xl">✦</span>
               </div>
             )}
           </div>
