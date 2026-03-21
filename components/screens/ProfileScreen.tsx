@@ -16,6 +16,14 @@ export function ProfileScreen() {
   const showToast    = useAppStore((s) => s.showToast)
   const { login, logout, authenticated, user: privyUser } = usePrivy()
 
+  // Background colors sampled from each avatar image
+  const avatarColors: Record<string, { bg: string; glow1: string; glow2: string }> = {
+    female: { bg: '#0e0c2b', glow1: 'rgba(140,100,180,0.25)', glow2: 'rgba(180,140,200,0.12)' },
+    male:   { bg: '#0e0c2b', glow1: 'rgba(80,120,200,0.25)', glow2: 'rgba(100,150,230,0.12)' },
+    none:   { bg: '#0D0D1A', glow1: 'rgba(123,104,238,0.20)', glow2: 'rgba(255,184,77,0.12)' },
+  }
+  const colors = avatarColors[user.avatar] ?? avatarColors.none
+
   const [editing, setEditing]   = useState(false)
   const [username, setUsernameLocal] = useState(user.username)
 
@@ -46,36 +54,44 @@ export function ProfileScreen() {
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-hide">
-        {/* Hero area — avatar with ambient glow */}
-        <div className="relative flex flex-col items-center pt-14 pb-6">
-          {/* Ambient glow behind avatar */}
-          <div className="absolute top-20 w-40 h-40 rounded-full bg-accent-secondary/20 blur-[60px] pointer-events-none" />
-          <div className="absolute top-28 w-28 h-28 rounded-full bg-accent-primary/15 blur-[40px] pointer-events-none" />
+        {/* Hero area — avatar-colored background */}
+        <div className="relative flex flex-col items-center pt-8 pb-2">
+          {/* Background wash — flat color fading into page bg */}
+          <div
+            className="absolute top-0 left-0 right-0 h-[360px] pointer-events-none"
+            style={{
+              background: `linear-gradient(to bottom, ${colors.bg} 0%, ${colors.bg} 40%, transparent 100%)`,
+            }}
+          />
 
-          {/* Avatar — tappable to change */}
+          {/* Avatar — frameless, soft vignette edges */}
           <button
             onClick={() => navigate('avatar-select')}
-            className="relative group active:scale-[0.97] transition-transform duration-150"
+            className="relative group active:scale-[0.97] transition-transform duration-150 z-[1]"
           >
-            <div className="w-44 h-64 rounded-[20px] overflow-hidden ring-2 ring-white/10 shadow-elevated">
+            <div className="w-56 h-72">
               {user.avatar !== 'none' ? (
                 <Image
                   src={`/avatars/profile-${user.avatar}.png`}
                   alt={user.avatar}
-                  width={176}
-                  height={256}
+                  width={224}
+                  height={288}
                   className="w-full h-full object-cover"
+                  style={{
+                    maskImage: 'radial-gradient(ellipse 80% 85% at 50% 40%, black 60%, transparent 100%)',
+                    WebkitMaskImage: 'radial-gradient(ellipse 80% 85% at 50% 40%, black 60%, transparent 100%)',
+                  }}
                 />
               ) : (
-                <div className="w-full h-full bg-bg-elevated flex items-center justify-center">
-                  <span className="text-5xl opacity-30">🧭</span>
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="text-6xl opacity-30">🧭</span>
                 </div>
               )}
             </div>
           </button>
 
           {/* Username */}
-          <div className="mt-5 flex flex-col items-center gap-1">
+          <div className="mt-6 flex flex-col items-center gap-2">
             {editing ? (
               <div className="flex items-center gap-2">
                 <input
