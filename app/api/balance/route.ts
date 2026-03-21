@@ -57,18 +57,21 @@ export async function GET(req: NextRequest) {
         incentivePool.getEffectiveBoostAPY(address),
       ])
       isBoostActive = boostActive
-      effectiveBoostAPY = Number(boostAPYRaw) / 100 // basis points to percentage
+      effectiveBoostAPY = Number(boostAPYRaw) // already whole percent (5, 10, 50, 200, 500)
 
-      if (boostData.tokenId !== BigInt(0)) {
+      if (boostData.emblemTokenId !== BigInt(0)) {
+        const rarityIndex = Number(boostData.rarity)
+        const rarityName = RARITY_NAMES[rarityIndex] ?? 'special'
+        const expiresAtSec = Number(boostData.expiresAt)
+        // Return shape matching the store's ActiveBoost type
         activeBoost = {
-          tokenId:          boostData.tokenId.toString(),
-          rarity:           Number(boostData.rarity),
-          rarityName:       RARITY_NAMES[Number(boostData.rarity)] ?? 'special',
-          boostBps:         Number(boostData.boostBps),
+          emblemId:         boostData.emblemTokenId.toString(),
+          rarity:           rarityName,
+          boostPercentage:  Number(boostData.boostAPY),
           depositCap:       parseFloat(ethers.formatUnits(boostData.depositCap, 6)),
           startedAt:        new Date(Number(boostData.startedAt) * 1000).toISOString(),
-          expiresAt:        new Date(Number(boostData.expiresAt) * 1000).toISOString(),
-          remainingSeconds: Math.max(0, Number(boostData.expiresAt) - Math.floor(Date.now() / 1000)),
+          expiresAt:        new Date(expiresAtSec * 1000).toISOString(),
+          remainingSeconds: Math.max(0, expiresAtSec - Math.floor(Date.now() / 1000)),
         }
       }
     }

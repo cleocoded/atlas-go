@@ -281,8 +281,7 @@ export const useAppStore = create<AppState & AppActions>()(
         s.wallet.yieldRatePerSecond = yieldPerSecond
         s.user.totalEmblemsClaimed += 1
         s.user.locationsVisited += 1
-        s.currentScreen = 'map'
-        s.activeClaimLocationId = null
+        // Don't navigate here — let ClaimScreen show the rarity reveal first
       })
 
       get().addActivity({ type: 'claim', description: `Claimed "${location.emblemArtTitle ?? location.name}" emblem`, amount: null })

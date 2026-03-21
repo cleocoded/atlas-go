@@ -41,7 +41,7 @@ export const LENDING_ABI = [
 ]
 
 export const INCENTIVE_POOL_ABI = [
-  'function getActiveBoost(address) view returns (tuple(uint256 tokenId, uint8 rarity, uint16 boostBps, uint256 depositCap, uint64 startedAt, uint64 expiresAt))',
+  'function getActiveBoost(address) view returns (tuple(uint256 emblemTokenId, uint8 rarity, uint16 boostAPY, uint256 depositCap, uint64 startedAt, uint64 expiresAt))',
   'function isBoostActive(address) view returns (bool)',
   'function getEffectiveBoostAPY(address) view returns (uint16)',
   'function getDepositCap(address) view returns (uint256)',

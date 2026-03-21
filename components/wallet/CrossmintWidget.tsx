@@ -43,15 +43,22 @@ export function CrossmintWidget({ recipientAddress, onSuccess }: CrossmintWidget
     return <CrossmintSkeleton />
   }
 
-  // Crossmint EmbeddedCheckout config for stgUSDC purchase
-  // The `lineItems` here target a stgUSDC top-up product configured in the Crossmint dashboard.
-  // Replace CROSSMINT_COLLECTION_ID with the actual collection/product ID from console.crossmint.io.
+  // Crossmint EmbeddedCheckout requires a valid collection ID from console.crossmint.io
+  const collectionId = process.env.NEXT_PUBLIC_CROSSMINT_COLLECTION_ID
+  if (!collectionId) {
+    return (
+      <div className="rounded-input bg-bg-elevated p-4 text-center min-h-[100px] flex flex-col items-center justify-center gap-2">
+        <p className="text-body-sm text-text-tertiary">Fiat onramp requires</p>
+        <code className="text-body-sm text-accent-primary font-mono">NEXT_PUBLIC_CROSSMINT_COLLECTION_ID</code>
+      </div>
+    )
+  }
+
   const lineItems = {
-    tokenLocator: `crossmint:${process.env.NEXT_PUBLIC_EMBLEM_CONTRACT ?? 'CONFIGURE_COLLECTION_ID'}`,
+    tokenLocator: `flow-testnet:${collectionId}`,
     executionParameters: {
-      // For crypto onramp: specify recipient on Flow EVM
       mint: {
-        to: recipientAddress ?? 'email:<user-email>:flow-evm',
+        to: recipientAddress ?? undefined,
       },
     },
   }

@@ -96,14 +96,12 @@ export function ClaimScreen() {
     idle:       'Spin to Claim',
     committing: 'Committing...',
     revealing:  'Revealing...',
-    success:    'Claimed',
+    success:    'Continue',
     error:      'Try Again',
   }[claimState]
 
   const buttonState = claimState === 'committing' || claimState === 'revealing'
     ? 'loading' as const
-    : claimState === 'success'
-    ? 'disabled' as const
     : 'default' as const
 
   const rarityConfig = revealedRarity ? RARITY_CONFIG[revealedRarity] : null
@@ -216,7 +214,7 @@ export function ClaimScreen() {
             fullWidth
             state={buttonState}
             variant={claimState === 'error' ? 'danger' : 'primary'}
-            onClick={claimState === 'error' ? executeClaim : handleClaimTap}
+            onClick={claimState === 'success' ? closeClaim : claimState === 'error' ? executeClaim : handleClaimTap}
           >
             {buttonText}
           </Button>

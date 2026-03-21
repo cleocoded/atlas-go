@@ -7,22 +7,17 @@ import { RARITY_CONFIG, type RarityTier } from '@/types'
 // Rarity enum: 0=special, 1=rare, 2=epic, 3=legendary, 4=mythical
 const RARITY_NAMES: RarityTier[] = ['special', 'rare', 'epic', 'legendary', 'mythical']
 
-// Location registry — in production this comes from a DB / admin CMS
-const LOCATION_REGISTRY: Record<string, {
-  metadataUri: string
-}> = {
-  'loc-paypal-sf': {
-    metadataUri: 'ipfs://QmPlaceholder/paypal-sf.json',
-  },
-  'loc-flow-hq': {
-    metadataUri: 'ipfs://QmPlaceholder/flow-hq.json',
-  },
-  'loc-paypal-downtown': {
-    metadataUri: 'ipfs://QmPlaceholder/paypal-downtown.json',
-  },
-  'loc-flow-events': {
-    metadataUri: 'ipfs://QmPlaceholder/flow-events.json',
-  },
+// Location metadata URIs — in production this comes from a DB / admin CMS
+const LOCATION_METADATA: Record<string, string> = {
+  'loc-paypal-sf':       'ipfs://QmPlaceholder/paypal-sf.json',
+  'loc-flow-hq':         'ipfs://QmPlaceholder/flow-hq.json',
+  'loc-paypal-downtown': 'ipfs://QmPlaceholder/paypal-downtown.json',
+  'loc-flow-events':     'ipfs://QmPlaceholder/flow-events.json',
+}
+
+/** Get metadata URI for a location (fallback for dynamic/nearby locations) */
+function getMetadataUri(locationId: string): string {
+  return LOCATION_METADATA[locationId] ?? `ipfs://QmPlaceholder/${locationId}.json`
 }
 
 /**
@@ -48,10 +43,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'locationId required' }, { status: 400 })
     }
 
-    const location = LOCATION_REGISTRY[locationId]
-    if (!location) {
-      return NextResponse.json({ error: 'Unknown location' }, { status: 400 })
-    }
+    const metadataUri = getMetadataUri(locationId)
 
     // ── Check env ────────────────────────────────────────────────────────────
 
@@ -92,12 +84,25 @@ export async function POST(req: NextRequest) {
     )
     await commitTx.wait()
 
+    // ── Wait for at least 1 Flow block before reveal ─────────────────────
+    // The contract requires _flowBlockHeight() > committedHeight.
+    // Poll until a new block is produced (Flow blocks are ~1s).
+    const provider = signer.provider!
+    const commitBlock = await provider.getBlockNumber()
+    let attempts = 0
+    while (attempts < 30) {
+      await new Promise((r) => setTimeout(r, 1000))
+      const currentBlock = await provider.getBlockNumber()
+      if (currentBlock > commitBlock) break
+      attempts++
+    }
+
     // ── Step 2: Reveal ─────────────────────────────────────────────────────
 
     const revealTx = await emblemContract.revealClaim(
       walletAddress,
       locationBytes,
-      location.metadataUri,
+      metadataUri,
       { gasLimit: 500_000 }
     )
     const revealReceipt = await revealTx.wait()
