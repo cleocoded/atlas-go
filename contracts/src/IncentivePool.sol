@@ -17,11 +17,17 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
  *         Yield above the base lending rate is paid from this pool.
  *         When the pool is depleted, no more boosts can be activated.
  */
+interface IMockLending {
+    function deposits(address user) external view returns (uint256);
+    function baseAPYBps() external view returns (uint256);
+}
+
 contract IncentivePool is Ownable {
     using SafeERC20 for IERC20;
 
     IERC20 public immutable stgUSDC;
     address public minter; // relayer
+    IMockLending public lendingPool;
 
     uint256 public constant BOOST_DURATION = 72 hours;
 
@@ -47,8 +53,9 @@ contract IncentivePool is Ownable {
     mapping(address => ActiveBoost) public activeBoosts;
 
     // ── Settled yield tracking ───────────────────────────────────────────────
-    // Tracks how much boost yield has been reserved/paid per user per boost
     mapping(address => uint256) public pendingBoostYield;
+    // Last timestamp boost yield was checkpointed
+    mapping(address => uint64) public lastBoostCheckpoint;
 
     // ── Events ───────────────────────────────────────────────────────────────
     event BoostActivated(
@@ -68,9 +75,10 @@ contract IncentivePool is Ownable {
         _;
     }
 
-    constructor(address _stgUSDC, address _minter) Ownable(msg.sender) {
+    constructor(address _stgUSDC, address _minter, address _lendingPool) Ownable(msg.sender) {
         stgUSDC = IERC20(_stgUSDC);
         minter = _minter;
+        lendingPool = IMockLending(_lendingPool);
 
         // Initialize boost configs (must match AtlasGoEmblem rarity enum)
         boostConfigs[0] = BoostConfig({ boostAPY: 5,   depositCap: 10_000e6 }); // Special
@@ -106,7 +114,9 @@ contract IncentivePool is Ownable {
         require(rarity <= 4, "Invalid rarity");
         require(poolBalance() > 0, "Incentive pool depleted");
 
-        // Expire previous boost if active
+        // Settle pending yield from previous boost before replacing
+        _boostCheckpoint(user);
+
         ActiveBoost memory existing = activeBoosts[user];
         if (existing.emblemTokenId != 0 && block.timestamp < existing.expiresAt) {
             emit BoostExpired(user, existing.emblemTokenId);
@@ -159,5 +169,69 @@ contract IncentivePool is Ownable {
         ActiveBoost memory b = activeBoosts[user];
         if (b.emblemTokenId == 0 || block.timestamp >= b.expiresAt) return 0;
         return b.depositCap;
+    }
+
+    /**
+     * @notice Returns total claimable boost yield (settled + pending).
+     */
+    function earnedBoostYield(address user) external view returns (uint256) {
+        return pendingBoostYield[user] + _pendingBoostYield(user);
+    }
+
+    // ── Boost yield claim ─────────────────────────────────────────────────
+
+    /**
+     * @notice Claim accrued boost yield. Pays the differential above base APY.
+     */
+    function claimBoostYield() external {
+        _boostCheckpoint(msg.sender);
+        uint256 amount = pendingBoostYield[msg.sender];
+        require(amount > 0, "Nothing to claim");
+        require(amount <= poolBalance(), "Insufficient pool balance");
+        pendingBoostYield[msg.sender] = 0;
+        stgUSDC.safeTransfer(msg.sender, amount);
+        emit BoostYieldClaimed(msg.sender, amount);
+    }
+
+    // ── Internal: boost yield calculation ─────────────────────────────────
+
+    function _boostCheckpoint(address user) internal {
+        pendingBoostYield[user] += _pendingBoostYield(user);
+        lastBoostCheckpoint[user] = uint64(block.timestamp);
+    }
+
+    /**
+     * @dev Calculates unsettled boost yield since last checkpoint.
+     *      boostYield = min(deposit, depositCap) * (boostAPY - baseAPY) / 100 * elapsed / 365 days
+     *      Only counts time within the boost window.
+     */
+    function _pendingBoostYield(address user) internal view returns (uint256) {
+        ActiveBoost memory b = activeBoosts[user];
+        if (b.emblemTokenId == 0) return 0;
+
+        uint64 start = lastBoostCheckpoint[user];
+        if (start < b.startedAt) start = b.startedAt;
+
+        uint64 end = uint64(block.timestamp);
+        if (end > b.expiresAt) end = b.expiresAt;
+
+        if (end <= start) return 0;
+
+        uint256 elapsed = uint256(end - start);
+        uint256 userDeposit = lendingPool.deposits(user);
+        uint256 cappedDeposit = userDeposit < b.depositCap ? userDeposit : b.depositCap;
+        if (cappedDeposit == 0) return 0;
+
+        // Differential above base APY (boostAPY is total effective %, baseAPY is in bps)
+        uint256 baseAPYPercent = lendingPool.baseAPYBps() / 100;
+        if (b.boostAPY <= baseAPYPercent) return 0;
+        uint256 diffAPY = uint256(b.boostAPY) - baseAPYPercent;
+
+        // yield = cappedDeposit * diffAPY / 100 * elapsed / 365 days
+        return (cappedDeposit * diffAPY * elapsed) / (100 * 365 days);
+    }
+
+    function setLendingPool(address _lendingPool) external onlyOwner {
+        lendingPool = IMockLending(_lendingPool);
     }
 }

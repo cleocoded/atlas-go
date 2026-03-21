@@ -76,6 +76,8 @@ contract MockLending is Ownable {
         _checkpoint(msg.sender);
         uint256 amount = accruedYield[msg.sender];
         require(amount > 0, "Nothing to claim");
+        uint256 available = stgUSDC.balanceOf(address(this)) - totalDeposits;
+        require(amount <= available, "Insufficient yield reserves");
         accruedYield[msg.sender] = 0;
         stgUSDC.safeTransfer(msg.sender, amount);
         emit YieldClaimed(msg.sender, amount);
@@ -107,6 +109,6 @@ contract MockLending is Ownable {
         if (last == 0 || deposits[user] == 0) return 0;
         uint256 elapsed = block.timestamp - last;
         // yield = principal * APY_bps / 10000 * elapsed / 365.25 days
-        return (deposits[user] * baseAPYBps * elapsed) / (10000 * 365.25 days);
+        return (deposits[user] * baseAPYBps * elapsed) / (10000 * 365 days);
     }
 }

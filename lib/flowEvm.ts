@@ -46,6 +46,8 @@ export const INCENTIVE_POOL_ABI = [
   'function getDepositCap(address) view returns (uint256)',
   'function activateBoost(address user, uint256 tokenId, uint8 rarity)',
   'function poolBalance() view returns (uint256)',
+  'function earnedBoostYield(address) view returns (uint256)',
+  'function claimBoostYield()',
 ]
 
 export const STGUSDС_ABI = [

@@ -32,7 +32,7 @@ async function main() {
 
   // 4. Deploy IncentivePool ($50k boost pool)
   const IncentivePool = await hre.ethers.getContractFactory("IncentivePool");
-  const pool = await IncentivePool.deploy(stgUSDCAddr, MINTER_ADDRESS);
+  const pool = await IncentivePool.deploy(stgUSDCAddr, MINTER_ADDRESS, lendingAddr);
   await pool.waitForDeployment();
   const poolAddr = await pool.getAddress();
   console.log("IncentivePool deployed to:", poolAddr);
