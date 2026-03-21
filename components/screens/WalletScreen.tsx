@@ -1,12 +1,17 @@
 'use client'
 import { useState } from 'react'
-import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { usePrivy, useSendTransaction } from '@privy-io/react-auth'
 import { ethers } from 'ethers'
 import { useAppStore }  from '@/store/appStore'
 import { YieldCounter } from '@/components/ui/YieldCounter'
 import { Button }       from '@/components/ui/Button'
 import { formatCurrency, formatCountdown } from '@/types'
 import { QRCodeSVG } from 'qrcode.react'
+
+// ERC-20 transfer function selector + ABI encoding
+const ERC20_TRANSFER_ABI = new ethers.Interface([
+  'function transfer(address to, uint256 amount) returns (bool)',
+])
 
 function DepositModal({ onClose }: { onClose: () => void }) {
   const address = useAppStore((s) => s.wallet.address)
@@ -62,7 +67,7 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
   const walletAddress = useAppStore((s) => s.wallet.address)
   const withdraw      = useAppStore((s) => s.withdraw)
   const showToast     = useAppStore((s) => s.showToast)
-  const { wallets }   = useWallets()
+  const { sendTransaction } = useSendTransaction()
 
   const handleSubmit = async () => {
     const val = parseFloat(amount)
@@ -77,40 +82,28 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
     }
     if (!walletAddress) return
 
-    // Find the Privy embedded wallet
-    const embeddedWallet = wallets.find((w) => w.address === walletAddress)
-    if (!embeddedWallet) {
-      showToast('Wallet not found', 'error')
+    const stgUsdcAddr = process.env.NEXT_PUBLIC_STGUSDC_ADDRESS
+    if (!stgUsdcAddr) {
+      showToast('Token contract not configured', 'error')
       return
     }
 
     setLoading(true)
     try {
-      const eip1193 = await embeddedWallet.getEthereumProvider()
-      const provider = new ethers.BrowserProvider(eip1193)
-      const signer = await provider.getSigner()
-
-      const stgUsdcAddr = process.env.NEXT_PUBLIC_STGUSDC_ADDRESS
-      if (!stgUsdcAddr) {
-        showToast('Token contract not configured', 'error')
-        return
-      }
-
-      const erc20 = new ethers.Contract(
-        stgUsdcAddr,
-        ['function transfer(address to, uint256 amount) returns (bool)'],
-        signer
-      )
-
+      // Encode ERC-20 transfer calldata
       const amountUnits = ethers.parseUnits(String(val), 6)
-      // Flow EVM requires a minimum gas price (~16 gwei)
-      const feeData = await provider.getFeeData()
-      const minGas = BigInt('20000000000') // 20 gwei
-      const gasPrice = feeData.gasPrice && feeData.gasPrice > minGas
-        ? feeData.gasPrice
-        : minGas
-      const tx = await erc20.transfer(toAddress, amountUnits, { gasPrice })
-      await tx.wait()
+      const data = ERC20_TRANSFER_ABI.encodeFunctionData('transfer', [toAddress, amountUnits])
+
+      // Use Privy's sendTransaction which handles gas pricing internally
+      await sendTransaction(
+        {
+          to: stgUsdcAddr,
+          data,
+          chainId: 545,
+          gasPrice: BigInt('20000000000'), // 20 gwei — Flow EVM minimum
+        },
+        { header: 'Withdraw USDC', description: `Send ${formatCurrency(val)} to ${toAddress.slice(0, 6)}...${toAddress.slice(-4)}` }
+      )
 
       withdraw(val)
       showToast(`Sent ${formatCurrency(val)} to ${toAddress.slice(0, 6)}...${toAddress.slice(-4)}`, 'success')
