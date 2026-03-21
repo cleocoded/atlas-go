@@ -121,17 +121,21 @@ export function WalletScreen() {
           </p>
           <div className="flex justify-between py-2 border-b border-border-default">
             <span className="text-body-md text-text-tertiary">Base APY</span>
-            <span className="text-label text-text-primary">{wallet.baseAPY}%</span>
+            <span className="text-label text-text-primary">2-3%</span>
           </div>
           {hasBoost ? (
             <>
               <div className="flex justify-between py-2 border-b border-border-default">
-                <span className="text-body-md text-text-tertiary">Active Boost</span>
-                <span className="text-label text-accent-boost">+{wallet.activeBoost!.boostPercentage}%</span>
+                <span className="text-body-md text-text-tertiary">Rarity</span>
+                <span className="text-label text-text-primary capitalize">{wallet.activeBoost!.rarity}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border-default">
-                <span className="text-body-md text-text-tertiary">Effective APY</span>
-                <span className="text-label text-text-primary">{wallet.activeBoost!.effectiveAPY}%</span>
+                <span className="text-body-md text-text-tertiary">Boosted APY</span>
+                <span className="text-label text-accent-boost">{wallet.activeBoost!.boostPercentage}%</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-border-default">
+                <span className="text-body-md text-text-tertiary">Deposit Cap</span>
+                <span className="text-label text-text-primary">{formatCurrency(wallet.activeBoost!.depositCap, 0)}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border-default">
                 <span className="text-body-md text-text-tertiary">Boost Expires</span>

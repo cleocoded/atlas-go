@@ -24,9 +24,7 @@ const MOCK_LOCATIONS: Location[] = [
     coordinates: { lat: 1.3007, lng: 103.8591 },
     emblemArtwork: '/emblems/paypal-sf.svg',
     emblemArtTitle: 'Golden Gate Sunrise',
-    boostPercentage: 300,
-    boostDurationHours: 72,
-    rarity: 'uncommon',
+    mythicalClaimed: false,
     isActive: true,
   },
   {
@@ -37,9 +35,7 @@ const MOCK_LOCATIONS: Location[] = [
     coordinates: { lat: 1.3025, lng: 103.8565 },
     emblemArtwork: '/emblems/flow-hq.svg',
     emblemArtTitle: 'Bay Bridge Blaze',
-    boostPercentage: 450,
-    boostDurationHours: 48,
-    rarity: 'legendary',
+    mythicalClaimed: false,
     isActive: true,
   },
   {
@@ -50,9 +46,7 @@ const MOCK_LOCATIONS: Location[] = [
     coordinates: { lat: 1.2994, lng: 103.8555 },
     emblemArtwork: '/emblems/paypal-downtown.svg',
     emblemArtTitle: null,
-    boostPercentage: 220,
-    boostDurationHours: 24,
-    rarity: 'common',
+    mythicalClaimed: false,
     isActive: true,
   },
   {
@@ -63,9 +57,7 @@ const MOCK_LOCATIONS: Location[] = [
     coordinates: { lat: 1.3018, lng: 103.8612 },
     emblemArtwork: '/emblems/flow-events.svg',
     emblemArtTitle: 'Sunset District Badge',
-    boostPercentage: 380,
-    boostDurationHours: 96,
-    rarity: 'rare',
+    mythicalClaimed: false,
     isActive: true,
   },
 ]
@@ -85,7 +77,7 @@ const initialState: AppState = {
     isConnected: false,
     address: null,
     balance: 0,
-    baseAPY: 3.0,
+    baseAPY: 2.5,
     activeBoost: null,
     accruedYield: 0,
     yieldRatePerSecond: 0,
@@ -122,7 +114,7 @@ interface AppActions {
   // Claim flow
   openClaim: (locationId: string) => void
   closeClaim: () => void
-  claimEmblem: (locationId: string) => Promise<void>
+  claimEmblem: (locationId: string, claimResult?: { rarity: string; boostPercentage: number; depositCap: number }) => Promise<{ rarity: string; boostPercentage: number; depositCap: number } | undefined>
 
   // Collection
   setFilter: (filter: CollectionFilter) => void
@@ -137,7 +129,7 @@ interface AppActions {
   withdraw: (amount: number) => void
   tickYield: () => void
   checkBoostExpiry: () => void
-  setBoostFromChain: (data: { balance: number; activeBoost: ActiveBoost | null; effectiveAPY: number }) => void
+  setBoostFromChain: (data: { balance: number; activeBoost: ActiveBoost | null }) => void
 
   // Profile
   setUsername: (name: string) => void
@@ -207,20 +199,22 @@ export const useAppStore = create<AppState & AppActions>()(
         s.currentScreen = 'map'
       }),
 
-    claimEmblem: async (locationId) => {
+    claimEmblem: async (locationId, claimResult) => {
       const state = get()
       const location = state.locations.find((l) => l.id === locationId)
       if (!location) return
 
+      const BOOST_DURATION_HOURS = 72
       const now = new Date()
       const expiresAt = new Date(
-        now.getTime() + location.boostDurationHours * 3600 * 1000
+        now.getTime() + BOOST_DURATION_HOURS * 3600 * 1000
       )
 
       // Call gasless relay API (handles on-chain mint when contracts are deployed;
       // returns mock success in dev mode when contracts are not yet set up)
+      let apiResult = claimResult
       const walletAddress = state.wallet.address
-      if (walletAddress) {
+      if (walletAddress && !apiResult) {
         const res = await fetch('/api/claim', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -228,10 +222,16 @@ export const useAppStore = create<AppState & AppActions>()(
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error ?? 'Claim failed')
-      } else {
+        apiResult = { rarity: data.rarity, boostPercentage: data.boostPercentage, depositCap: data.depositCap }
+      } else if (!walletAddress) {
         // No wallet connected — Privy will create one silently; delay for UX
         await new Promise((r) => setTimeout(r, 2000))
       }
+
+      // Fallback defaults when no API result (e.g. dev/offline mode)
+      const rarity = apiResult?.rarity ?? 'common'
+      const boostPercentage = apiResult?.boostPercentage ?? 100
+      const depositCap = apiResult?.depositCap ?? 1000
 
       const newEmblem: CollectedEmblem = {
         id: `emblem-${Date.now()}`,
@@ -242,30 +242,30 @@ export const useAppStore = create<AppState & AppActions>()(
         artTitle: location.emblemArtTitle,
         claimedAt: now.toISOString(),
         expiresAt: expiresAt.toISOString(),
-        boostPercentage: location.boostPercentage,
-        boostDurationHours: location.boostDurationHours,
-        rarity: location.rarity,
+        boostPercentage,
+        depositCap,
+        rarity: rarity as CollectedEmblem['rarity'],
         depositAtClaim: state.wallet.balance,
         expectedEarnings:
-          (state.wallet.balance *
-            (location.boostPercentage / 100) *
-            (location.boostDurationHours / 8760)),
+          (Math.min(state.wallet.balance, depositCap) *
+            (boostPercentage / 100) *
+            (BOOST_DURATION_HOURS / 8760)),
         isActive: true,
         isHidden: false,
       }
 
       const newBoost: ActiveBoost = {
         emblemId: newEmblem.id,
-        boostPercentage: location.boostPercentage,
-        effectiveAPY: state.wallet.baseAPY + location.boostPercentage,
+        rarity: rarity as ActiveBoost['rarity'],
+        boostPercentage,
+        depositCap,
         startedAt: now.toISOString(),
         expiresAt: expiresAt.toISOString(),
-        remainingSeconds: location.boostDurationHours * 3600,
+        remainingSeconds: BOOST_DURATION_HOURS * 3600,
       }
 
       // Calculate yield rate per second at boosted APY
-      const effectiveApy = state.wallet.baseAPY + location.boostPercentage
-      const yieldPerSecond = (state.wallet.balance * (effectiveApy / 100)) / 31536000
+      const yieldPerSecond = (Math.min(state.wallet.balance, depositCap) * (boostPercentage / 100)) / 31536000
 
       set((s) => {
         // Expire previous active emblem if any
@@ -286,8 +286,10 @@ export const useAppStore = create<AppState & AppActions>()(
       })
 
       get().addActivity({ type: 'claim', description: `Claimed "${location.emblemArtTitle ?? location.name}" emblem`, amount: null })
-      get().addActivity({ type: 'boost_activated', description: `Boost activated: +${location.boostPercentage}% APY for ${location.boostDurationHours}h`, amount: null })
-      get().showToast(`Claimed! +${location.boostPercentage}% APY boost activated`, 'success')
+      get().addActivity({ type: 'boost_activated', description: `Boost activated: +${boostPercentage}% APY for ${BOOST_DURATION_HOURS}h`, amount: null })
+      get().showToast(`Claimed! +${boostPercentage}% APY boost activated`, 'success')
+
+      return { rarity, boostPercentage, depositCap }
     },
 
     // ── Collection ──────────────────────────────────────────────────────────
@@ -333,9 +335,10 @@ export const useAppStore = create<AppState & AppActions>()(
     deposit: (amount) => {
       set((s) => {
         s.wallet.balance += amount
-        // Recalculate yield rate
-        const effectiveApy = s.wallet.baseAPY + (s.wallet.activeBoost?.boostPercentage ?? 0)
-        s.wallet.yieldRatePerSecond = (s.wallet.balance * (effectiveApy / 100)) / 31536000
+        // Recalculate yield rate (boostPercentage IS total effective APY when boost active)
+        const effectiveApy = s.wallet.activeBoost?.boostPercentage ?? s.wallet.baseAPY
+        const cappedBalance = s.wallet.activeBoost ? Math.min(s.wallet.balance, s.wallet.activeBoost.depositCap) : s.wallet.balance
+        s.wallet.yieldRatePerSecond = (cappedBalance * (effectiveApy / 100)) / 31536000
       })
       get().addActivity({ type: 'deposit', description: `Deposited ${amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}`, amount })
     },
@@ -343,8 +346,9 @@ export const useAppStore = create<AppState & AppActions>()(
     withdraw: (amount) => {
       set((s) => {
         s.wallet.balance = Math.max(0, s.wallet.balance - amount)
-        const effectiveApy = s.wallet.baseAPY + (s.wallet.activeBoost?.boostPercentage ?? 0)
-        s.wallet.yieldRatePerSecond = (s.wallet.balance * (effectiveApy / 100)) / 31536000
+        const effectiveApy = s.wallet.activeBoost?.boostPercentage ?? s.wallet.baseAPY
+        const cappedBalance = s.wallet.activeBoost ? Math.min(s.wallet.balance, s.wallet.activeBoost.depositCap) : s.wallet.balance
+        s.wallet.yieldRatePerSecond = (cappedBalance * (effectiveApy / 100)) / 31536000
       })
       get().addActivity({ type: 'withdraw', description: `Withdrew ${amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}`, amount })
     },
@@ -386,7 +390,7 @@ export const useAppStore = create<AppState & AppActions>()(
       }
     },
 
-    setBoostFromChain: ({ balance, activeBoost, effectiveAPY }) =>
+    setBoostFromChain: ({ balance, activeBoost }) =>
       set((s) => {
         // Only update balance if meaningful change (avoid overriding optimistic UI mid-tx)
         const diff = Math.abs(s.wallet.balance - balance)
@@ -394,8 +398,10 @@ export const useAppStore = create<AppState & AppActions>()(
 
         s.wallet.activeBoost = activeBoost
 
-        // Recalculate yield rate from chain's effective APY
-        s.wallet.yieldRatePerSecond = (balance * (effectiveAPY / 100)) / 31536000
+        // Recalculate yield rate from boost's APY (boostPercentage IS the total effective APY)
+        const effectiveApy = activeBoost?.boostPercentage ?? s.wallet.baseAPY
+        const cappedBalance = activeBoost ? Math.min(balance, activeBoost.depositCap) : balance
+        s.wallet.yieldRatePerSecond = (cappedBalance * (effectiveApy / 100)) / 31536000
       }),
 
     // ── Profile ─────────────────────────────────────────────────────────────

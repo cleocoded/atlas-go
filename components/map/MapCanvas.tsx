@@ -10,23 +10,20 @@ const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? ''
 // Dark map style matching spec
 const DARK_STYLE = 'mapbox://styles/mapbox/dark-v11'
 
-// Color for marker states
-function getMarkerColor(state: MarkerState, rarity: string): string {
+// Color for marker states — locations don't have rarity (it's random at claim)
+function getMarkerColor(state: MarkerState): string {
   if (state === 'out-of-range') return '#5A5A70'
-  if (rarity === 'legendary')   return '#FFB84D'
-  if (rarity === 'rare')        return '#7B68EE'
-  if (rarity === 'uncommon')    return '#00E5A0'
-  return '#A0A0B8'
+  return '#FFB84D' // accent gold for in-range / claimed
 }
 
-function createMarkerEl(state: MarkerState, rarity: string): HTMLDivElement {
+function createMarkerEl(state: MarkerState): HTMLDivElement {
   const size = state === 'in-range' ? 48 : 40
   const el = document.createElement('div')
   el.style.cssText = `
     width: ${size}px;
     height: ${size}px;
     border-radius: 50%;
-    background: ${getMarkerColor(state, rarity)};
+    background: ${getMarkerColor(state)};
     border: ${state === 'claimed' ? '2px solid #FFD700' : '2px solid rgba(255,255,255,0.2)'};
     cursor: pointer;
     display: flex;
@@ -142,7 +139,7 @@ export function MapCanvas() {
           const size = state === 'in-range' ? 48 : 40
           el.style.width  = `${size}px`
           el.style.height = `${size}px`
-          el.style.background = getMarkerColor(state, location.rarity)
+          el.style.background = getMarkerColor(state)
           el.style.border = state === 'claimed' ? '2px solid #FFD700' : '2px solid rgba(255,255,255,0.2)'
           el.style.animation = state === 'in-range'
             ? 'marker-pulse 1.5s ease-in-out infinite'
@@ -150,7 +147,7 @@ export function MapCanvas() {
             ? 'gold-shimmer 3s linear infinite'
             : 'none'
         } else {
-          const el = createMarkerEl(state, location.rarity)
+          const el = createMarkerEl(state)
 
           el.addEventListener('click', () => {
             const currentState = markerStateRef.current.get(location.id)

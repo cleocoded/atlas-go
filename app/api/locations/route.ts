@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
-import type { Location } from '@/types'
-import { getRarity } from '@/types'
 
 /**
  * GET /api/locations?lat=...&lng=...
- * Returns partnership locations. When lat/lng provided, always includes
- * a few nearby demo locations so there's always something to claim.
+ * Returns partnership locations. Rarity is now determined on-chain at claim time,
+ * so locations no longer carry boostPercentage/boostDurationHours/rarity.
+ * mythicalClaimed indicates if the one mythical emblem has already been minted.
  */
-const SINGAPORE_LOCATIONS: Omit<Location, 'rarity'>[] = [
+
+interface LocationData {
+  id: string
+  name: string
+  partnerName: string
+  partnerLogo: string
+  coordinates: { lat: number; lng: number }
+  emblemArtwork: string
+  emblemArtTitle: string | null
+  isActive: boolean
+  mythicalClaimed: boolean
+}
+
+const SINGAPORE_LOCATIONS: LocationData[] = [
   {
     id: 'loc-paypal-sf',
     name: 'PayPal Innovation Lab',
@@ -16,9 +28,8 @@ const SINGAPORE_LOCATIONS: Omit<Location, 'rarity'>[] = [
     coordinates: { lat: 1.3007, lng: 103.8591 },
     emblemArtwork: '/emblems/paypal-sf.svg',
     emblemArtTitle: 'Golden Gate Sunrise',
-    boostPercentage: 300,
-    boostDurationHours: 72,
     isActive: true,
+    mythicalClaimed: false,
   },
   {
     id: 'loc-flow-hq',
@@ -28,9 +39,8 @@ const SINGAPORE_LOCATIONS: Omit<Location, 'rarity'>[] = [
     coordinates: { lat: 1.3025, lng: 103.8565 },
     emblemArtwork: '/emblems/flow-hq.svg',
     emblemArtTitle: 'Bay Bridge Blaze',
-    boostPercentage: 450,
-    boostDurationHours: 48,
     isActive: true,
+    mythicalClaimed: false,
   },
   {
     id: 'loc-paypal-downtown',
@@ -40,9 +50,8 @@ const SINGAPORE_LOCATIONS: Omit<Location, 'rarity'>[] = [
     coordinates: { lat: 1.2994, lng: 103.8555 },
     emblemArtwork: '/emblems/paypal-downtown.svg',
     emblemArtTitle: null,
-    boostPercentage: 220,
-    boostDurationHours: 24,
     isActive: true,
+    mythicalClaimed: false,
   },
   {
     id: 'loc-flow-events',
@@ -52,20 +61,18 @@ const SINGAPORE_LOCATIONS: Omit<Location, 'rarity'>[] = [
     coordinates: { lat: 1.3018, lng: 103.8612 },
     emblemArtwork: '/emblems/flow-events.svg',
     emblemArtTitle: 'Sunset District Badge',
-    boostPercentage: 380,
-    boostDurationHours: 96,
     isActive: true,
+    mythicalClaimed: false,
   },
 ]
 
 /** Generate demo locations near a given position */
-function generateNearbyLocations(lat: number, lng: number): Omit<Location, 'rarity'>[] {
-  // Offsets in degrees (~50m each at most latitudes)
+function generateNearbyLocations(lat: number, lng: number): LocationData[] {
   const nearby = [
-    { dlat: 0.0003, dlng: 0.0004, name: 'Flow Café', title: 'Local Explorer', boost: 250, hours: 48 },
-    { dlat: -0.0005, dlng: 0.0002, name: 'Flow Pop-Up', title: 'Street Discovery', boost: 350, hours: 72 },
-    { dlat: 0.0002, dlng: -0.0006, name: 'Flow Lounge', title: 'Neighborhood Badge', boost: 420, hours: 96 },
-    { dlat: -0.0008, dlng: -0.0003, name: 'Flow Gallery', title: 'Art District Pass', boost: 180, hours: 24 },
+    { dlat: 0.0003, dlng: 0.0004, name: 'Flow Cafe', title: 'Local Explorer' },
+    { dlat: -0.0005, dlng: 0.0002, name: 'Flow Pop-Up', title: 'Street Discovery' },
+    { dlat: 0.0002, dlng: -0.0006, name: 'Flow Lounge', title: 'Neighborhood Badge' },
+    { dlat: -0.0008, dlng: -0.0003, name: 'Flow Gallery', title: 'Art District Pass' },
   ]
 
   return nearby.map((n, i) => ({
@@ -76,9 +83,8 @@ function generateNearbyLocations(lat: number, lng: number): Omit<Location, 'rari
     coordinates: { lat: lat + n.dlat, lng: lng + n.dlng },
     emblemArtwork: '/emblems/flow-hq.svg',
     emblemArtTitle: n.title,
-    boostPercentage: n.boost,
-    boostDurationHours: n.hours,
     isActive: true,
+    mythicalClaimed: false,
   }))
 }
 
@@ -103,12 +109,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const locations: Location[] = allLocations.map((l) => ({
-    ...l,
-    rarity: getRarity(l.boostPercentage),
-  }))
+  // TODO: When contracts are deployed, query isMythicalClaimed for each location
+  // and set mythicalClaimed accordingly
 
-  return NextResponse.json(locations, {
+  return NextResponse.json(allLocations, {
     headers: {
       'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
     },

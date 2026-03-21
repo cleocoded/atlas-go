@@ -2,11 +2,11 @@
 
 export type AvatarType = 'male' | 'female' | 'none'
 
-export type RarityTier = 'common' | 'uncommon' | 'rare' | 'legendary'
+export type RarityTier = 'special' | 'rare' | 'epic' | 'legendary' | 'mythical'
 
 export type MarkerState = 'out-of-range' | 'in-range' | 'claimed'
 
-export type ClaimState = 'idle' | 'spinning' | 'minting' | 'success' | 'error'
+export type ClaimState = 'idle' | 'committing' | 'revealing' | 'success' | 'error'
 
 export type CollectionFilter = 'active' | 'expired' | 'hidden'
 
@@ -30,6 +30,23 @@ export type ActivityType =
   | 'boost_activated'
   | 'boost_expired'
 
+// ── Rarity Config ────────────────────────────────────────────────────────────
+
+export interface RarityInfo {
+  boostAPY: number      // total effective APY %
+  depositCap: number    // max deposit earning boosted rate (USD)
+  label: string         // display name
+  color: string         // border/badge color hex
+}
+
+export const RARITY_CONFIG: Record<RarityTier, RarityInfo> = {
+  special:   { boostAPY: 5,   depositCap: 10000, label: 'Special',   color: '#A0A0B8' },
+  rare:      { boostAPY: 10,  depositCap: 10000, label: 'Rare',      color: '#00E5A0' },
+  epic:      { boostAPY: 50,  depositCap: 5000,  label: 'Epic',      color: '#7B68EE' },
+  legendary: { boostAPY: 200, depositCap: 2000,  label: 'Legendary', color: '#FFD700' },
+  mythical:  { boostAPY: 500, depositCap: 1000,  label: 'Mythical',  color: '#FF6BA0' },
+}
+
 // ── Location ──────────────────────────────────────────────────────────────────
 
 export interface Location {
@@ -40,9 +57,7 @@ export interface Location {
   coordinates: { lat: number; lng: number }
   emblemArtwork: string
   emblemArtTitle: string | null
-  boostPercentage: number   // 200–500
-  boostDurationHours: number // 1–168
-  rarity: RarityTier        // derived from boostPercentage
+  mythicalClaimed: boolean
   isActive: boolean
 }
 
@@ -56,10 +71,10 @@ export interface CollectedEmblem {
   artwork: string
   artTitle: string | null
   claimedAt: string       // ISO 8601
-  expiresAt: string       // ISO 8601
-  boostPercentage: number
-  boostDurationHours: number
-  rarity: RarityTier
+  expiresAt: string       // ISO 8601 (claimedAt + 72h)
+  boostPercentage: number // total effective APY (5, 10, 50, 200, or 500)
+  depositCap: number      // max deposit earning boosted rate
+  rarity: RarityTier      // determined by on-chain randomness
   depositAtClaim: number
   expectedEarnings: number
   isActive: boolean       // derived: now < expiresAt
@@ -70,8 +85,9 @@ export interface CollectedEmblem {
 
 export interface ActiveBoost {
   emblemId: string
-  boostPercentage: number
-  effectiveAPY: number    // baseAPY + boostPercentage
+  rarity: RarityTier
+  boostPercentage: number // total effective APY %
+  depositCap: number      // max deposit earning boosted rate
   startedAt: string       // ISO 8601
   expiresAt: string       // ISO 8601
   remainingSeconds: number
@@ -80,8 +96,8 @@ export interface ActiveBoost {
 export interface WalletState {
   isConnected: boolean
   address: string | null
-  balance: number         // stgUSDC balance in deposit pool
-  baseAPY: number         // 3.0
+  balance: number         // stgUSDC balance in lending pool
+  baseAPY: number         // 2.0–3.0 (from MockLending)
   activeBoost: ActiveBoost | null
   accruedYield: number
   yieldRatePerSecond: number
@@ -134,13 +150,6 @@ export interface ToastMessage {
 }
 
 // ── Utility Helpers ───────────────────────────────────────────────────────────
-
-export function getRarity(boostPercentage: number): RarityTier {
-  if (boostPercentage >= 450) return 'legendary'
-  if (boostPercentage >= 350) return 'rare'
-  if (boostPercentage >= 250) return 'uncommon'
-  return 'common'
-}
 
 export function getMarkerState(
   locationId: string,

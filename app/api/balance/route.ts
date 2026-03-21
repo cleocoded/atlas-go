@@ -1,12 +1,16 @@
 export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getProvider, getYieldContract, getStgUsdcContract } from '@/lib/flowEvm'
+import { getProvider, getLendingContract, getIncentivePoolContract, getStgUsdcContract } from '@/lib/flowEvm'
 import { ethers } from 'ethers'
+
+// Rarity enum: 0=special, 1=rare, 2=epic, 3=legendary, 4=mythical
+const RARITY_NAMES = ['special', 'rare', 'epic', 'legendary', 'mythical'] as const
 
 /**
  * GET /api/balance?address=0x...
- * Returns on-chain stgUSDC balance in deposit pool + active boost state.
+ * Returns on-chain deposit balance (MockLending), earned yield,
+ * and active boost state (IncentivePool).
  * Frontend polls this on screen focus to keep state in sync.
  */
 export async function GET(req: NextRequest) {
@@ -17,28 +21,57 @@ export async function GET(req: NextRequest) {
   }
 
   // Return zeros when contracts not yet deployed
-  if (!process.env.NEXT_PUBLIC_YIELD_CONTRACT) {
+  if (!process.env.NEXT_PUBLIC_LENDING_CONTRACT) {
     return NextResponse.json({
       depositBalance: 0,
+      earned: 0,
+      baseAPY: 3,
       stgUsdcWallet: 0,
       activeBoost: null,
       isBoostActive: false,
-      effectiveAPY: 3,
+      effectiveBoostAPY: 0,
       mock: true,
     })
   }
 
   try {
     const provider = getProvider()
-    const yieldContract = getYieldContract(provider)
+    const lendingContract = getLendingContract(provider)
 
-    const [depositBalRaw, activeBoost, isBoostActive, effectiveAPYRaw] =
-      await Promise.all([
-        yieldContract.deposits(address),
-        yieldContract.getActiveBoost(address),
-        yieldContract.isBoostActive(address),
-        yieldContract.getEffectiveAPY(address),
+    const [depositBalRaw, earnedRaw, baseAPYRaw] = await Promise.all([
+      lendingContract.deposits(address),
+      lendingContract.earned(address),
+      lendingContract.baseAPY(),
+    ])
+
+    // Read boost state from IncentivePool if configured
+    let activeBoost = null
+    let isBoostActive = false
+    let effectiveBoostAPY = 0
+
+    if (process.env.NEXT_PUBLIC_INCENTIVE_POOL_CONTRACT) {
+      const incentivePool = getIncentivePoolContract(provider)
+      const [boostData, boostActive, boostAPYRaw] = await Promise.all([
+        incentivePool.getActiveBoost(address),
+        incentivePool.isBoostActive(address),
+        incentivePool.getEffectiveBoostAPY(address),
       ])
+      isBoostActive = boostActive
+      effectiveBoostAPY = Number(boostAPYRaw) / 100 // basis points to percentage
+
+      if (boostData.tokenId !== BigInt(0)) {
+        activeBoost = {
+          tokenId:          boostData.tokenId.toString(),
+          rarity:           Number(boostData.rarity),
+          rarityName:       RARITY_NAMES[Number(boostData.rarity)] ?? 'special',
+          boostBps:         Number(boostData.boostBps),
+          depositCap:       parseFloat(ethers.formatUnits(boostData.depositCap, 6)),
+          startedAt:        new Date(Number(boostData.startedAt) * 1000).toISOString(),
+          expiresAt:        new Date(Number(boostData.expiresAt) * 1000).toISOString(),
+          remainingSeconds: Math.max(0, Number(boostData.expiresAt) - Math.floor(Date.now() / 1000)),
+        }
+      }
+    }
 
     // stgUSDC wallet balance (user's EOA, not deposited)
     let stgUsdcWallet = 0
@@ -52,36 +85,28 @@ export async function GET(req: NextRequest) {
     }
 
     const depositBalance = parseFloat(ethers.formatUnits(depositBalRaw, 6)) // stgUSDC = 6 decimals
-
-    // effectiveAPY is stored as basis points * 100 in contract (300 = 3.00%)
-    const effectiveAPY = Number(effectiveAPYRaw) / 100
-
-    const boost =
-      activeBoost.tokenId === BigInt(0)
-        ? null
-        : {
-            tokenId:         activeBoost.tokenId.toString(),
-            boostPercentage: Number(activeBoost.boostPercentage),
-            startedAt:       new Date(Number(activeBoost.startedAt) * 1000).toISOString(),
-            expiresAt:       new Date(Number(activeBoost.expiresAt) * 1000).toISOString(),
-            remainingSeconds: Math.max(0, Number(activeBoost.expiresAt) - Math.floor(Date.now() / 1000)),
-          }
+    const earned = parseFloat(ethers.formatUnits(earnedRaw, 6))
+    const baseAPY = Number(baseAPYRaw) / 100 // basis points to percentage
 
     return NextResponse.json({
       depositBalance,
+      earned,
+      baseAPY,
       stgUsdcWallet,
-      activeBoost: boost,
+      activeBoost,
       isBoostActive,
-      effectiveAPY,
+      effectiveBoostAPY,
     })
   } catch (err) {
     console.warn('[balance] Contract call failed, returning mock data:', (err as Error).message)
     return NextResponse.json({
       depositBalance: 0,
+      earned: 0,
+      baseAPY: 3,
       stgUsdcWallet: 0,
       activeBoost: null,
       isBoostActive: false,
-      effectiveAPY: 3,
+      effectiveBoostAPY: 0,
       mock: true,
     })
   }

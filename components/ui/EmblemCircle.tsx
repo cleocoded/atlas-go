@@ -11,18 +11,17 @@ interface EmblemCircleProps {
   className?: string
 }
 
-const BORDER_CLASS: Record<RarityTier, string> = {
-  common:    'rarity-common',
-  uncommon:  'rarity-uncommon',
-  rare:      'rarity-rare',
-  legendary: 'rarity-legendary',
-}
-
 export function EmblemCircle({ src, alt, size, rarity, isActive, className = '' }: EmblemCircleProps) {
   const borderClass = isActive
-    ? rarity === 'legendary'
+    ? rarity === 'mythical'
       ? 'border-rainbow'
-      : 'border-gold-shimmer'
+      : rarity === 'legendary'
+      ? 'border-gold-shimmer'
+      : rarity === 'epic'
+      ? 'border-2 border-[#7B68EE]'
+      : rarity === 'rare'
+      ? 'border-2 border-[#00E5A0]'
+      : 'border-2 border-[#A0A0B8]'
     : 'border-2 border-border-expired'
 
   const grayscaleClass = !isActive ? 'grayscale-[20%]' : ''

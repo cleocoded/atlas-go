@@ -1,45 +1,37 @@
 export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getMinterSigner, getEmblemContract, getYieldContract, locationIdToBytes32 } from '@/lib/flowEvm'
-import { getRarity } from '@/types'
+import { getMinterSigner, getEmblemContract, getIncentivePoolContract, locationIdToBytes32 } from '@/lib/flowEvm'
+
+// Rarity enum: 0=special, 1=rare, 2=epic, 3=legendary, 4=mythical
+const RARITY_NAMES = ['special', 'rare', 'epic', 'legendary', 'mythical'] as const
 
 // Location registry — in production this comes from a DB / admin CMS
-// Mirrors the mock data in appStore.ts
 const LOCATION_REGISTRY: Record<string, {
-  boostPercentage: number
-  boostDurationHours: number
   metadataUri: string
 }> = {
   'loc-paypal-sf': {
-    boostPercentage: 300,
-    boostDurationHours: 72,
     metadataUri: 'ipfs://QmPlaceholder/paypal-sf.json',
   },
   'loc-flow-hq': {
-    boostPercentage: 450,
-    boostDurationHours: 48,
     metadataUri: 'ipfs://QmPlaceholder/flow-hq.json',
   },
   'loc-paypal-downtown': {
-    boostPercentage: 220,
-    boostDurationHours: 24,
     metadataUri: 'ipfs://QmPlaceholder/paypal-downtown.json',
   },
   'loc-flow-events': {
-    boostPercentage: 380,
-    boostDurationHours: 96,
     metadataUri: 'ipfs://QmPlaceholder/flow-events.json',
   },
 }
 
 /**
  * POST /api/claim
- * Gasless emblem mint relay. Called by the frontend after the user taps "Spin to Claim."
+ * Two-phase gasless emblem mint relay (commit-reveal).
+ * Called by the frontend after the user taps "Spin to Claim."
  * The minter wallet pays gas on Flow EVM (effectively free for the user via Privy sponsorship).
  *
  * Body: { walletAddress: string, locationId: string }
- * Returns: { success: true, tokenId: string, txHash: string }
+ * Returns: { success: true, tokenId: string, rarity: number, rarityName: string, txHash: string }
  */
 export async function POST(req: NextRequest) {
   try {
@@ -63,21 +55,23 @@ export async function POST(req: NextRequest) {
     // ── Check env ────────────────────────────────────────────────────────────
 
     if (!process.env.DEPLOYER_PRIVATE_KEY || !process.env.NEXT_PUBLIC_EMBLEM_CONTRACT) {
-      // Contracts not deployed yet — return a mock success for development
+      // Contracts not deployed yet — return a mock success with random rarity
       console.warn('[claim] Contracts not configured — returning mock success')
+      const mockRarity = Math.floor(Math.random() * 5) as 0 | 1 | 2 | 3 | 4
       return NextResponse.json({
         success: true,
         tokenId: `mock-${Date.now()}`,
         txHash: `0x${'0'.repeat(64)}`,
+        rarity: mockRarity,
+        rarityName: RARITY_NAMES[mockRarity],
         mock: true,
       })
     }
 
     // ── On-chain: check already claimed ─────────────────────────────────────
 
-    const signer    = getMinterSigner()
-    const emblemContract  = getEmblemContract(signer)
-    const yieldContract = getYieldContract(signer)
+    const signer = getMinterSigner()
+    const emblemContract = getEmblemContract(signer)
     const locationBytes = locationIdToBytes32(locationId)
 
     const alreadyClaimed = await emblemContract.hasClaimed(locationBytes, walletAddress)
@@ -85,47 +79,59 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Already claimed this location' }, { status: 409 })
     }
 
-    // ── Mint Emblem (gasless — minter pays) ──────────────────────────────────
+    // ── Step 1: Commit ─────────────────────────────────────────────────────
 
-    const mintTx = await emblemContract.mintEmblem(
+    const commitTx = await emblemContract.commitClaim(
+      walletAddress,
+      locationBytes,
+      { gasLimit: 300_000 }
+    )
+    await commitTx.wait()
+
+    // ── Step 2: Reveal ─────────────────────────────────────────────────────
+
+    const revealTx = await emblemContract.revealClaim(
       walletAddress,
       locationBytes,
       location.metadataUri,
-      location.boostPercentage,
-      location.boostDurationHours,
       { gasLimit: 500_000 }
     )
+    const revealReceipt = await revealTx.wait()
 
-    const receipt = await mintTx.wait()
-
-    // Parse tokenId from emitted event
+    // Parse tokenId and rarity from the return value / event
     const emblemIface = emblemContract.interface
     let tokenId = '0'
-    for (const log of receipt.logs) {
+    let rarity: number = 0
+    for (const log of revealReceipt.logs) {
       try {
         const parsed = emblemIface.parseLog({ topics: log.topics, data: log.data })
         if (parsed?.name === 'EmblemClaimed') {
           tokenId = parsed.args[1].toString()
+          rarity = Number(parsed.args[2])
           break
         }
       } catch { /* skip unrelated logs */ }
     }
 
-    // ── Activate boost in YieldBoost contract ────────────────────────────────
+    // ── Step 3: Activate boost in IncentivePool ────────────────────────────
 
-    const boostTx = await yieldContract.setBoost(
-      walletAddress,
-      tokenId,
-      location.boostPercentage,
-      location.boostDurationHours,
-      { gasLimit: 200_000 }
-    )
-    await boostTx.wait()
+    if (process.env.NEXT_PUBLIC_INCENTIVE_POOL_CONTRACT) {
+      const incentivePool = getIncentivePoolContract(signer)
+      const boostTx = await incentivePool.activateBoost(
+        walletAddress,
+        tokenId,
+        rarity,
+        { gasLimit: 300_000 }
+      )
+      await boostTx.wait()
+    }
 
     return NextResponse.json({
       success: true,
       tokenId,
-      txHash: receipt.hash,
+      txHash: revealReceipt.hash,
+      rarity,
+      rarityName: RARITY_NAMES[rarity] ?? 'special',
     })
   } catch (err) {
     console.error('[claim] Error:', err)

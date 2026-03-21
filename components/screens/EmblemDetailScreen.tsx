@@ -3,7 +3,7 @@ import { useAppStore } from '@/store/appStore'
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
 import { RarityBadge }  from '@/components/ui/RarityBadge'
 import { EmblemCircle } from '@/components/ui/EmblemCircle'
-import { formatDate, formatCurrency, formatCountdown } from '@/types'
+import { formatDate, formatCurrency, RARITY_CONFIG } from '@/types'
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
@@ -65,7 +65,8 @@ export function EmblemDetailScreen() {
           <DetailRow label="Location"        value={emblem.locationName} />
           <DetailRow label="Partner"         value={emblem.partnerName} />
           <DetailRow label="Boost"           value={`+${emblem.boostPercentage}% APY`} />
-          <DetailRow label="Duration"        value={formatCountdown(emblem.boostDurationHours * 3600)} />
+          <DetailRow label="Deposit Cap"     value={formatCurrency(emblem.depositCap, 0)} />
+          <DetailRow label="Duration"        value="3 days" />
           <DetailRow label="Expires"         value={formatDate(emblem.expiresAt)} />
           <DetailRow label="Status"          value={isActive ? 'Active' : 'Expired'} />
           <DetailRow label="Deposit at claim" value={formatCurrency(emblem.depositAtClaim)} />

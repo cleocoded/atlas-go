@@ -19,14 +19,11 @@ export function useOnChainSync() {
       const data = await res.json()
       if (data.error) return
 
-      // Sync deposit balance — only update if it changed meaningfully (>$0.01 diff)
-      // to avoid overriding optimistic UI from deposit/withdraw actions
+      // Sync deposit balance and boost state from chain
       if (typeof data.depositBalance === 'number') {
-        // setBalanceFromChain is defined below in the store patch
         setBoostFromChain({
-          balance:    data.depositBalance,
-          activeBoost: data.activeBoost,
-          effectiveAPY: data.effectiveAPY,
+          balance:     data.depositBalance,
+          activeBoost: data.activeBoost ?? null,
         })
       }
     } catch {

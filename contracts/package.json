@@ -3,17 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "compile":  "hardhat compile",
-    "test":     "hardhat test",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
     "deploy:testnet": "hardhat run deploy.js --network flowTestnet",
     "deploy:mainnet": "hardhat run deploy.js --network flowMainnet",
-    "verify":   "hardhat verify --network flowTestnet"
+    "verify": "hardhat verify --network flowTestnet"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "hardhat": "^2.22.0"
   },
   "dependencies": {
+    "@onflow/flow-sol-utils": "^0.0.1",
     "@openzeppelin/contracts": "^5.0.2"
   }
 }

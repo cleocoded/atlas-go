@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useAppStore }   from '@/store/appStore'
 import { RarityBadge }   from '@/components/ui/RarityBadge'
 import { Button }        from '@/components/ui/Button'
-import { ClaimState, formatCurrency, formatCountdown } from '@/types'
+import { ClaimState, RarityTier, RARITY_CONFIG, formatCurrency, formatCountdown } from '@/types'
 
 export function ClaimScreen() {
   const locationId = useAppStore((s) => s.activeClaimLocationId)
@@ -20,6 +20,7 @@ export function ClaimScreen() {
   const [showReplaceDialog, setShowReplaceDialog] = useState(false)
   const [spinning, setSpinning] = useState(false)
   const [showFlash, setShowFlash] = useState(false)
+  const [revealedRarity, setRevealedRarity] = useState<RarityTier | null>(null)
   const claimDebounceRef = useRef(false)
 
   // Close on escape
@@ -48,7 +49,7 @@ export function ClaimScreen() {
     setTimeout(() => { claimDebounceRef.current = false }, 2000)
 
     setSpinning(true)
-    setClaimState('spinning')
+    setClaimState('committing')
 
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       navigator.vibrate([50, 30, 50])
@@ -57,18 +58,33 @@ export function ClaimScreen() {
     // Wait for spin animation (2000ms) + bounce (300ms)
     await new Promise((r) => setTimeout(r, 2300))
     setSpinning(false)
-    setClaimState('minting')
-
-    if (location.rarity === 'legendary') {
-      setShowFlash(true)
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        navigator.vibrate([100, 50, 100])
-      }
-      setTimeout(() => setShowFlash(false), 600)
-    }
+    setClaimState('revealing')
 
     try {
-      await claimEmblem(location.id)
+      const result = await claimEmblem(location.id)
+
+      // Extract rarity from claim result
+      const rarity = (result?.rarity ?? 'special') as RarityTier
+      setRevealedRarity(rarity)
+
+      // Mythical: rainbow burst + screen flash
+      if (rarity === 'mythical') {
+        setShowFlash(true)
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+          navigator.vibrate([100, 50, 100, 50, 100])
+        }
+        setTimeout(() => setShowFlash(false), 600)
+      }
+
+      // Legendary: gold shimmer burst (less intense)
+      if (rarity === 'legendary') {
+        setShowFlash(true)
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+          navigator.vibrate([100, 50, 100])
+        }
+        setTimeout(() => setShowFlash(false), 400)
+      }
+
       setClaimState('success')
     } catch {
       setClaimState('error')
@@ -77,22 +93,24 @@ export function ClaimScreen() {
   }
 
   const buttonText = {
-    idle:     'Spin to Claim',
-    spinning: 'Spinning…',
-    minting:  'Minting…',
-    success:  'Claimed ✓',
-    error:    'Try Again',
+    idle:       'Spin to Claim',
+    committing: 'Committing...',
+    revealing:  'Revealing...',
+    success:    'Claimed',
+    error:      'Try Again',
   }[claimState]
 
-  const buttonState = claimState === 'spinning' || claimState === 'minting'
+  const buttonState = claimState === 'committing' || claimState === 'revealing'
     ? 'loading' as const
     : claimState === 'success'
     ? 'disabled' as const
     : 'default' as const
 
+  const rarityConfig = revealedRarity ? RARITY_CONFIG[revealedRarity] : null
+
   return (
     <>
-      {/* Legendary flash */}
+      {/* Mythical / Legendary flash */}
       {showFlash && (
         <div
           className="fixed inset-0 z-[25] bg-white pointer-events-none animate-screen-flash"
@@ -121,9 +139,16 @@ export function ClaimScreen() {
             className={`
               w-60 h-60 rounded-full overflow-hidden relative border-2 transition-all duration-500
               ${spinning ? 'animate-spin-claim' : ''}
-              ${claimState === 'success' ? 'border-gold-shimmer animate-bounce-claim' : 'border-border-default'}
-              ${location.rarity === 'legendary' && claimState === 'success' ? 'border-rainbow' : ''}
+              ${claimState === 'success' && revealedRarity === 'mythical' ? 'border-rainbow animate-bounce-claim' : ''}
+              ${claimState === 'success' && revealedRarity === 'legendary' ? 'border-gold-shimmer animate-bounce-claim' : ''}
+              ${claimState === 'success' && revealedRarity && revealedRarity !== 'mythical' && revealedRarity !== 'legendary' ? 'animate-bounce-claim border-border-default' : ''}
+              ${claimState !== 'success' ? 'border-border-default' : ''}
             `}
+            style={
+              claimState === 'success' && revealedRarity && revealedRarity !== 'mythical' && revealedRarity !== 'legendary'
+                ? { borderColor: RARITY_CONFIG[revealedRarity].color }
+                : undefined
+            }
           >
             {/* Artwork fallback */}
             <div className="absolute inset-0 bg-gradient-to-br from-accent-secondary/30 to-accent-primary/30 flex items-center justify-center">
@@ -131,8 +156,8 @@ export function ClaimScreen() {
             </div>
           </div>
 
-          {/* Particles — legendary only */}
-          {location.rarity === 'legendary' && claimState === 'success' && (
+          {/* Particles — mythical only */}
+          {revealedRarity === 'mythical' && claimState === 'success' && (
             <div className="absolute pointer-events-none" aria-hidden="true">
               {Array.from({ length: 16 }).map((_, i) => {
                 const angle = (i / 16) * 360
@@ -159,15 +184,29 @@ export function ClaimScreen() {
           <div className="text-center flex flex-col gap-1 mt-2">
             <h2 className="text-heading font-bold text-text-primary">{location.name}</h2>
             <p className="text-body-md text-text-secondary">{location.partnerName}</p>
-            <p className="text-body-lg font-semibold text-accent-boost mt-1">
-              +{location.boostPercentage}% APY Boost
-            </p>
-            <p className="text-body-md text-text-secondary">
-              Duration: {formatCountdown(location.boostDurationHours * 3600)}
-            </p>
-            <div className="mt-2">
-              <RarityBadge rarity={location.rarity} />
-            </div>
+
+            {claimState === 'idle' && (
+              <p className="text-body-lg font-semibold text-accent-primary mt-1">
+                Spin to reveal your rarity!
+              </p>
+            )}
+
+            {claimState === 'success' && rarityConfig && (
+              <>
+                <p className="text-body-lg font-semibold text-accent-boost mt-1">
+                  +{rarityConfig.boostAPY}% APY Boost
+                </p>
+                <p className="text-body-md text-text-secondary">
+                  Deposit Cap: {formatCurrency(rarityConfig.depositCap, 0)}
+                </p>
+                <p className="text-body-md text-text-secondary">
+                  Duration: 3 days
+                </p>
+                <div className="mt-2">
+                  <RarityBadge rarity={revealedRarity!} />
+                </div>
+              </>
+            )}
           </div>
         </div>
 

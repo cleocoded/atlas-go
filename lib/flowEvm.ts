@@ -25,17 +25,27 @@ export function getMinterSigner(): ethers.Wallet {
 // ── Minimal ABIs ──────────────────────────────────────────────────────────────
 
 export const EMBLEM_ABI = [
-  'function mintEmblem(address claimer, bytes32 locationId, string tokenURI, uint16 boostPercentage, uint32 boostDurationHours) returns (uint256)',
+  'function commitClaim(address claimer, bytes32 locationId)',
+  'function revealClaim(address claimer, bytes32 locationId, string metadataUri) returns (uint256 tokenId, uint8 rarity)',
   'function hasClaimed(bytes32 locationId, address claimer) view returns (bool)',
-  'function totalSupply() view returns (uint256)',
+  'function isMythicalClaimed(bytes32 locationId) view returns (bool)',
 ]
 
-export const YIELD_ABI = [
+export const LENDING_ABI = [
   'function deposits(address) view returns (uint256)',
-  'function getActiveBoost(address) view returns (tuple(uint256 tokenId, uint16 boostPercentage, uint64 startedAt, uint64 expiresAt))',
+  'function earned(address) view returns (uint256)',
+  'function baseAPY() view returns (uint256)',
+  'function deposit(uint256 amount)',
+  'function withdraw(uint256 amount)',
+]
+
+export const INCENTIVE_POOL_ABI = [
+  'function getActiveBoost(address) view returns (tuple(uint256 tokenId, uint8 rarity, uint16 boostBps, uint256 depositCap, uint64 startedAt, uint64 expiresAt))',
   'function isBoostActive(address) view returns (bool)',
-  'function getEffectiveAPY(address) view returns (uint256)',
-  'function setBoost(address user, uint256 tokenId, uint16 boostPercentage, uint32 boostDurationHours)',
+  'function getEffectiveBoostAPY(address) view returns (uint16)',
+  'function getDepositCap(address) view returns (uint256)',
+  'function activateBoost(address user, uint256 tokenId, uint8 rarity)',
+  'function poolBalance() view returns (uint256)',
 ]
 
 export const STGUSDС_ABI = [
@@ -49,10 +59,16 @@ export function getEmblemContract(signerOrProvider?: ethers.Signer | ethers.Prov
   return new ethers.Contract(addr, EMBLEM_ABI, signerOrProvider ?? getProvider())
 }
 
-export function getYieldContract(signerOrProvider?: ethers.Signer | ethers.Provider) {
-  const addr = process.env.NEXT_PUBLIC_YIELD_CONTRACT
-  if (!addr) throw new Error('NEXT_PUBLIC_YIELD_CONTRACT not set')
-  return new ethers.Contract(addr, YIELD_ABI, signerOrProvider ?? getProvider())
+export function getLendingContract(signerOrProvider?: ethers.Signer | ethers.Provider) {
+  const addr = process.env.NEXT_PUBLIC_LENDING_CONTRACT
+  if (!addr) throw new Error('NEXT_PUBLIC_LENDING_CONTRACT not set')
+  return new ethers.Contract(addr, LENDING_ABI, signerOrProvider ?? getProvider())
+}
+
+export function getIncentivePoolContract(signerOrProvider?: ethers.Signer | ethers.Provider) {
+  const addr = process.env.NEXT_PUBLIC_INCENTIVE_POOL_CONTRACT
+  if (!addr) throw new Error('NEXT_PUBLIC_INCENTIVE_POOL_CONTRACT not set')
+  return new ethers.Contract(addr, INCENTIVE_POOL_ABI, signerOrProvider ?? getProvider())
 }
 
 export function getStgUsdcContract(signerOrProvider?: ethers.Signer | ethers.Provider) {
