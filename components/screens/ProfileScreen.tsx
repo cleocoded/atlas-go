@@ -72,13 +72,6 @@ export function ProfileScreen() {
                 </div>
               )}
             </div>
-            {/* Edit overlay hint */}
-            <div className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-bg-primary/80 backdrop-blur-sm flex items-center justify-center ring-1 ring-white/10 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-secondary">
-                <path d="M12 20h9"/>
-                <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
-              </svg>
-            </div>
           </button>
 
           {/* Username */}
@@ -125,28 +118,25 @@ export function ProfileScreen() {
 
         {/* Stats row */}
         <div className="flex gap-3 px-5 mb-6">
-          <div className="flex-1 bg-bg-card/60 rounded-[14px] p-4 text-center">
+          <div className="flex-1 rounded-[14px] p-4 text-center border border-border-default/60 bg-gradient-to-b from-bg-card/80 to-bg-card/30">
             <p className="text-display-md text-text-primary tabular-nums">{user.totalEmblemsClaimed}</p>
-            <p className="text-body-sm text-text-tertiary mt-0.5">Emblems</p>
+            <p className="text-body-sm text-text-tertiary mt-1">Emblems</p>
           </div>
-          <div className="flex-1 bg-bg-card/60 rounded-[14px] p-4 text-center">
+          <div className="flex-1 rounded-[14px] p-4 text-center border border-accent-boost/15 bg-gradient-to-b from-accent-boost/[0.06] to-transparent">
             <p className="text-display-md text-accent-boost tabular-nums">{formatCurrency(user.totalYieldEarned)}</p>
-            <p className="text-body-sm text-text-tertiary mt-0.5">Yield</p>
+            <p className="text-body-sm text-text-tertiary mt-1">Yield</p>
           </div>
-          <div className="flex-1 bg-bg-card/60 rounded-[14px] p-4 text-center">
+          <div className="flex-1 rounded-[14px] p-4 text-center border border-border-default/60 bg-gradient-to-b from-bg-card/80 to-bg-card/30">
             <p className="text-display-md text-text-primary tabular-nums">{user.locationsVisited}</p>
-            <p className="text-body-sm text-text-tertiary mt-0.5">Places</p>
+            <p className="text-body-sm text-text-tertiary mt-1">Places</p>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="mx-5 h-px bg-border-default/50 mb-6" />
-
         {/* Menu-style actions */}
-        <div className="px-5 space-y-2 mb-8">
+        <div className="px-5 space-y-1.5 mb-6">
           <button
             onClick={() => navigate('avatar-select')}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-[14px] bg-bg-card/40 active:bg-bg-card transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-[14px] bg-bg-card/50 border border-border-default/40 active:bg-bg-card active:border-border-default transition-colors"
           >
             <div className="w-9 h-9 rounded-[10px] bg-accent-secondary/15 flex items-center justify-center">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent-secondary">
@@ -162,7 +152,7 @@ export function ProfileScreen() {
 
           <button
             onClick={() => navigate('settings')}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-[14px] bg-bg-card/40 active:bg-bg-card transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-[14px] bg-bg-card/50 border border-border-default/40 active:bg-bg-card active:border-border-default transition-colors"
           >
             <div className="w-9 h-9 rounded-[10px] bg-accent-primary/15 flex items-center justify-center">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent-primary">
@@ -175,26 +165,36 @@ export function ProfileScreen() {
               <path d="M9 18l6-6-6-6"/>
             </svg>
           </button>
-        </div>
 
-        {/* Logout — subtle, at the bottom */}
-        <div className="px-5 pb-10">
-          {authenticated ? (
+          {/* Logout row — same style, danger color */}
+          {authenticated && (
             <button
               onClick={() => { disconnectWallet(); logout() }}
-              className="w-full py-3 text-body-md text-accent-danger/70 active:text-accent-danger transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-[14px] bg-bg-card/50 border border-border-default/40 active:bg-accent-danger/10 active:border-accent-danger/30 transition-colors mt-3"
             >
-              Log Out
+              <div className="w-9 h-9 rounded-[10px] bg-accent-danger/10 flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent-danger/70">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+              </div>
+              <span className="text-body-lg text-accent-danger/70 flex-1 text-left">Log Out</span>
             </button>
-          ) : (
+          )}
+
+          {!authenticated && (
             <button
               onClick={login}
-              className="w-full py-3.5 rounded-[14px] bg-accent-primary text-bg-primary text-label font-semibold active:scale-[0.97] transition-transform shadow-button"
+              className="w-full py-3.5 rounded-[14px] bg-accent-primary text-bg-primary text-label font-semibold active:scale-[0.97] transition-transform shadow-button mt-3"
             >
               Connect Wallet
             </button>
           )}
         </div>
+
+        {/* Bottom breathing room */}
+        <div className="h-6" />
       </div>
     </div>
   )
