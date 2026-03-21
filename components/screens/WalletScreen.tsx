@@ -63,9 +63,34 @@ export function WalletScreen() {
   const activity = useAppStore((s) => s.activity)
   const navigate = useAppStore((s) => s.navigate)
   const deposit  = useAppStore((s) => s.deposit)
+  const showToast = useAppStore((s) => s.showToast)
   const { login } = usePrivy()
 
   const [modal, setModal] = useState<'deposit' | 'withdraw' | null>(null)
+  const [faucetLoading, setFaucetLoading] = useState(false)
+
+  const handleFaucet = async () => {
+    if (!wallet.address || faucetLoading) return
+    setFaucetLoading(true)
+    try {
+      const res = await fetch('/api/faucet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress: wallet.address }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        deposit(10000)
+        showToast('$10,000 demo stgUSDC received!', 'success')
+      } else {
+        showToast(data.error ?? 'Faucet failed', 'error')
+      }
+    } catch {
+      showToast('Faucet request failed', 'error')
+    } finally {
+      setFaucetLoading(false)
+    }
+  }
 
   const hasBoost   = !!wallet.activeBoost
   const hasBalance = wallet.balance > 0
@@ -113,6 +138,20 @@ export function WalletScreen() {
             Withdraw
           </Button>
         </div>
+
+        {/* Testnet faucet */}
+        {wallet.isConnected && !hasBalance && (
+          <div className="mx-4 mb-4">
+            <button
+              onClick={handleFaucet}
+              disabled={faucetLoading}
+              className="w-full h-12 rounded-button bg-accent-boost/15 border border-accent-boost/30 text-accent-boost text-label active:scale-[0.97] transition-transform disabled:opacity-50"
+            >
+              {faucetLoading ? 'Sending...' : 'Get $10,000 Demo Funds'}
+            </button>
+            <p className="text-body-sm text-text-disabled text-center mt-1">Testnet stgUSDC for testing</p>
+          </div>
+        )}
 
         {/* Yield info */}
         <div className="mx-4 mb-6 bg-bg-card rounded-card p-5 shadow-card">
