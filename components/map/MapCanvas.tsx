@@ -173,7 +173,13 @@ export function MapCanvas() {
             if (currentState === 'in-range') {
               store.openClaim(location.id)
             } else if (currentState === 'claimed') {
-              store.showToast('Already claimed this location!', 'info')
+              // Open the emblem detail for this location
+              const emblem = store.collectedEmblems.find(e => e.locationId === location.id)
+              if (emblem) {
+                store.openEmblemDetail(emblem.id)
+              } else {
+                store.showToast('Already claimed this location!', 'info')
+              }
             } else {
               mapRef.current?.flyTo({
                 center: [location.coordinates.lng, location.coordinates.lat],

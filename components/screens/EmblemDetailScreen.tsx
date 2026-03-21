@@ -69,8 +69,6 @@ export function EmblemDetailScreen() {
           <DetailRow label="Duration"        value="3 days" />
           <DetailRow label="Expires"         value={formatDate(emblem.expiresAt)} />
           <DetailRow label="Status"          value={isActive ? 'Active' : 'Expired'} />
-          <DetailRow label="Deposit at claim" value={formatCurrency(emblem.depositAtClaim)} />
-          <DetailRow label="Expected yield"  value={formatCurrency(emblem.expectedEarnings)} />
           {emblem.artTitle && (
             <DetailRow label="Art title" value={emblem.artTitle} />
           )}
