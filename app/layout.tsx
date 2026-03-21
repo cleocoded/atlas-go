@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     title: 'Atlas Go',
   },
   icons: {
-    icon: '/icon.png',
+    icon: '/logos/emblem-logo.svg',
     apple: '/apple-icon.png',
   },
 }

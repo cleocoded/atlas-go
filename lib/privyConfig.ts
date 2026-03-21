@@ -1,16 +1,16 @@
 import type { PrivyClientConfig } from '@privy-io/react-auth'
 
-// Flow EVM chain config
+// Flow EVM Testnet chain config
 const flowEVM = {
-  id: 747,
-  name: 'Flow EVM',
+  id: 545,
+  name: 'Flow EVM Testnet',
   nativeCurrency: { name: 'FLOW', symbol: 'FLOW', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://mainnet.evm.nodes.onflow.org'] },
-    public:  { http: ['https://mainnet.evm.nodes.onflow.org'] },
+    default: { http: ['https://testnet.evm.nodes.onflow.org'] },
+    public:  { http: ['https://testnet.evm.nodes.onflow.org'] },
   },
   blockExplorers: {
-    default: { name: 'Flowscan', url: 'https://evm.flowscan.io' },
+    default: { name: 'Flowscan', url: 'https://evm-testnet.flowscan.io' },
   },
 } as const
 
