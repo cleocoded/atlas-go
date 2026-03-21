@@ -34,9 +34,7 @@ export function useOnChainSync() {
       }
 
       // Sync claimed emblems from chain
-      console.log('[onChainSync] claimedEmblems from API:', data.claimedEmblems)
       if (Array.isArray(data.claimedEmblems) && data.claimedEmblems.length > 0) {
-        console.log('[onChainSync] Setting emblems in store:', data.claimedEmblems.length)
         setEmblemsFromChain(data.claimedEmblems)
       }
     } catch {
