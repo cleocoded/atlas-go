@@ -5,6 +5,7 @@ import { ethers } from 'ethers'
 import { getMinterSigner } from '@/lib/flowEvm'
 
 const FAUCET_AMOUNT = ethers.parseUnits('10000', 6) // $10,000 stgUSDC
+const GAS_FUND_AMOUNT = ethers.parseEther('1')     // 1 FLOW for gas fees
 const MOCK_ERC20_ABI = ['function mint(address to, uint256 amount)']
 
 /**
@@ -37,6 +38,17 @@ export async function POST(req: NextRequest) {
     const signer = getMinterSigner()
     const token = new ethers.Contract(stgUsdcAddr, MOCK_ERC20_ABI, signer)
 
+    // Send native FLOW for gas fees (so the wallet can sign ERC-20 transfers)
+    const userBalance = await signer.provider!.getBalance(walletAddress)
+    if (userBalance < GAS_FUND_AMOUNT) {
+      const gasTx = await signer.sendTransaction({
+        to: walletAddress,
+        value: GAS_FUND_AMOUNT,
+      })
+      await gasTx.wait()
+    }
+
+    // Mint stgUSDC
     const tx = await token.mint(walletAddress, FAUCET_AMOUNT)
     const receipt = await tx.wait()
 
