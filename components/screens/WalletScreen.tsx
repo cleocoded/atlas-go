@@ -7,6 +7,7 @@ import { YieldCounter } from '@/components/ui/YieldCounter'
 import { Button }       from '@/components/ui/Button'
 import { formatCurrency, formatCountdown } from '@/types'
 import { QRCodeSVG } from 'qrcode.react'
+import { useOnChainSync } from '@/lib/useOnChainSync'
 
 // ERC-20 transfer function selector + ABI encoding
 const ERC20_TRANSFER_ABI = new ethers.Interface([
@@ -65,9 +66,9 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(false)
   const balance       = useAppStore((s) => s.wallet.balance)
   const walletAddress = useAppStore((s) => s.wallet.address)
-  const withdraw      = useAppStore((s) => s.withdraw)
   const showToast     = useAppStore((s) => s.showToast)
   const { sendTransaction } = useSendTransaction()
+  const { syncNow } = useOnChainSync()
 
   const handleSubmit = async () => {
     const val = parseFloat(amount)
@@ -108,7 +109,7 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
         { header: 'Withdraw USDC', description: `Send ${formatCurrency(val)} to ${toAddress.slice(0, 6)}...${toAddress.slice(-4)}` }
       )
 
-      withdraw(val)
+      syncNow()
       showToast(`Sent ${formatCurrency(val)} to ${toAddress.slice(0, 6)}...${toAddress.slice(-4)}`, 'success')
       onClose()
     } catch (err: any) {
@@ -170,9 +171,9 @@ export function WalletScreen() {
   const activity = useAppStore((s) => s.activity)
   const navigate = useAppStore((s) => s.navigate)
   const goBack   = useAppStore((s) => s.goBack)
-  const deposit  = useAppStore((s) => s.deposit)
   const showToast = useAppStore((s) => s.showToast)
   const { login } = usePrivy()
+  const { syncNow } = useOnChainSync()
 
   const [modal, setModal] = useState<'deposit' | 'withdraw' | null>(null)
   const [faucetLoading, setFaucetLoading] = useState(false)
@@ -188,8 +189,9 @@ export function WalletScreen() {
       })
       const data = await res.json()
       if (data.success) {
-        deposit(10000)
-        showToast('$10,000 demo USDC received!', 'success')
+        // Read real balance from chain instead of assuming $10k
+        syncNow()
+        showToast('Demo USDC received!', 'success')
       } else {
         showToast(data.error ?? 'Faucet failed', 'error')
       }

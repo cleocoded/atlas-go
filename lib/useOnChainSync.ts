@@ -1,20 +1,20 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useAppStore } from '@/store/appStore'
 
 /**
  * Polls /api/balance every 30 seconds while a wallet is connected.
  * Syncs on-chain deposit balance and boost state into Zustand.
+ * Returns a `syncNow` function to trigger an immediate sync (e.g. after faucet).
  */
 export function useOnChainSync() {
   const address       = useAppStore((s) => s.wallet.address)
   const isConnected   = useAppStore((s) => s.wallet.isConnected)
-  const deposit       = useAppStore((s) => s.deposit)
   const setBoostFromChain   = useAppStore((s) => s.setBoostFromChain)
   const setEmblemsFromChain = useAppStore((s) => s.setEmblemsFromChain)
   const intervalRef   = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const sync = async (addr: string) => {
+  const sync = useCallback(async (addr: string) => {
     try {
       const res  = await fetch(`/api/balance?address=${addr}`)
       const data = await res.json()
@@ -40,7 +40,11 @@ export function useOnChainSync() {
     } catch {
       // Silent — offline / contracts not deployed
     }
-  }
+  }, [setBoostFromChain, setEmblemsFromChain])
+
+  const syncNow = useCallback(() => {
+    if (address) sync(address)
+  }, [address, sync])
 
   useEffect(() => {
     if (!isConnected || !address) {
@@ -57,6 +61,7 @@ export function useOnChainSync() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, address])
+  }, [isConnected, address, sync])
+
+  return { syncNow }
 }
