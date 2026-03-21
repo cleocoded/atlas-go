@@ -103,7 +103,13 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
       )
 
       const amountUnits = ethers.parseUnits(String(val), 6)
-      const tx = await erc20.transfer(toAddress, amountUnits)
+      // Flow EVM requires a minimum gas price (~16 gwei)
+      const feeData = await provider.getFeeData()
+      const minGas = BigInt('20000000000') // 20 gwei
+      const gasPrice = feeData.gasPrice && feeData.gasPrice > minGas
+        ? feeData.gasPrice
+        : minGas
+      const tx = await erc20.transfer(toAddress, amountUnits, { gasPrice })
       await tx.wait()
 
       withdraw(val)
