@@ -56,20 +56,45 @@ function DepositModal({ onClose }: { onClose: () => void }) {
 function WithdrawModal({ onClose }: { onClose: () => void }) {
   const [amount, setAmount] = useState('')
   const [toAddress, setToAddress] = useState('')
-  const balance  = useAppStore((s) => s.wallet.balance)
-  const withdraw = useAppStore((s) => s.withdraw)
-  const showToast = useAppStore((s) => s.showToast)
+  const [loading, setLoading] = useState(false)
+  const balance       = useAppStore((s) => s.wallet.balance)
+  const walletAddress = useAppStore((s) => s.wallet.address)
+  const withdraw      = useAppStore((s) => s.withdraw)
+  const showToast     = useAppStore((s) => s.showToast)
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const val = parseFloat(amount)
     if (isNaN(val) || val <= 0) return
+    if (val > balance) {
+      showToast('Amount exceeds balance', 'error')
+      return
+    }
     if (!toAddress.startsWith('0x') || toAddress.length < 42) {
       showToast('Enter a valid wallet address', 'error')
       return
     }
-    withdraw(Math.min(val, balance))
-    showToast(`Withdrawal of ${formatCurrency(val)} initiated`, 'success')
-    onClose()
+    if (!walletAddress) return
+
+    setLoading(true)
+    try {
+      const res = await fetch('/api/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress, toAddress, amount: val }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        withdraw(val)
+        showToast(`Sent ${formatCurrency(val)} to ${toAddress.slice(0, 6)}...${toAddress.slice(-4)}`, 'success')
+        onClose()
+      } else {
+        showToast(data.error ?? 'Withdraw failed', 'error')
+      }
+    } catch {
+      showToast('Withdraw request failed', 'error')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -77,7 +102,7 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
       <div className="bg-bg-card w-full max-w-mobile rounded-t-card p-6 pb-safe shadow-elevated" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-heading font-bold text-text-primary mb-2">Withdraw USDC</h3>
         <p className="text-body-sm text-text-tertiary mb-5">
-          Send USDC to an external wallet
+          Send USDC to an external wallet on Flow EVM Testnet
         </p>
 
         <div className="mb-4">
@@ -87,7 +112,8 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
-            className="w-full h-12 bg-bg-elevated rounded-[12px] px-4 text-text-primary text-body-lg outline-none border border-border-default focus:border-accent-primary transition-colors"
+            disabled={loading}
+            className="w-full h-12 bg-bg-elevated rounded-[12px] px-4 text-text-primary text-body-lg outline-none border border-border-default focus:border-accent-primary transition-colors disabled:opacity-50"
           />
           <p className="text-body-sm text-text-tertiary mt-1">
             Available: {formatCurrency(balance)}
@@ -101,13 +127,16 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
             value={toAddress}
             onChange={(e) => setToAddress(e.target.value)}
             placeholder="0x..."
-            className="w-full h-12 bg-bg-elevated rounded-[12px] px-4 text-text-primary text-body-md font-mono outline-none border border-border-default focus:border-accent-primary transition-colors"
+            disabled={loading}
+            className="w-full h-12 bg-bg-elevated rounded-[12px] px-4 text-text-primary text-body-md font-mono outline-none border border-border-default focus:border-accent-primary transition-colors disabled:opacity-50"
           />
         </div>
 
         <div className="flex gap-3">
-          <Button variant="ghost" size="md" fullWidth onClick={onClose}>Cancel</Button>
-          <Button variant="primary" size="md" fullWidth onClick={handleSubmit}>Withdraw</Button>
+          <Button variant="ghost" size="md" fullWidth onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button variant="primary" size="md" fullWidth onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Sending...' : 'Withdraw'}
+          </Button>
         </div>
       </div>
     </div>
