@@ -94,13 +94,16 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
       const amountUnits = ethers.parseUnits(String(val), 6)
       const data = ERC20_TRANSFER_ABI.encodeFunctionData('transfer', [toAddress, amountUnits])
 
-      // Use Privy's sendTransaction which handles gas pricing internally
+      // Force legacy tx (type 0) — Flow EVM reports baseFeePerGas=1 which
+      // tricks EIP-1559 into a gas price far below the 16 gwei minimum
       await sendTransaction(
         {
           to: stgUsdcAddr,
           data,
           chainId: 545,
-          gasPrice: BigInt('20000000000'), // 20 gwei — Flow EVM minimum
+          type: 0,
+          gasLimit: 100000,
+          gasPrice: '0x4A817C800', // 20 gwei — above Flow EVM's 16 gwei minimum
         },
         { header: 'Withdraw USDC', description: `Send ${formatCurrency(val)} to ${toAddress.slice(0, 6)}...${toAddress.slice(-4)}` }
       )
