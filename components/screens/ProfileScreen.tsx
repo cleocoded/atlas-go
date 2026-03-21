@@ -55,7 +55,7 @@ export function ProfileScreen() {
 
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         {/* Hero area — avatar-colored background */}
-        <div className="relative flex flex-col items-center pt-8 pb-2">
+        <div className="relative flex flex-col items-center pt-8 pb-6">
           {/* Background wash — flat color fading into page bg */}
           <div
             className="absolute top-0 left-0 right-0 h-[360px] pointer-events-none"
@@ -133,7 +133,7 @@ export function ProfileScreen() {
         </div>
 
         {/* Stats row */}
-        <div className="flex gap-3 px-5 mb-6">
+        <div className="flex gap-3 px-5 mb-8">
           <div className="flex-1 rounded-[14px] p-4 text-center border border-border-default/60 bg-gradient-to-b from-bg-card/80 to-bg-card/30">
             <p className="text-display-md text-text-primary tabular-nums">{user.totalEmblemsClaimed}</p>
             <p className="text-body-sm text-text-tertiary mt-1">Emblems</p>
