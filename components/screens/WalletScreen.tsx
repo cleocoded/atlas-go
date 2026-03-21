@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
-import { usePrivy }     from '@privy-io/react-auth'
+import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { ethers } from 'ethers'
 import { useAppStore }  from '@/store/appStore'
 import { YieldCounter } from '@/components/ui/YieldCounter'
 import { Button }       from '@/components/ui/Button'
@@ -61,6 +62,7 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
   const walletAddress = useAppStore((s) => s.wallet.address)
   const withdraw      = useAppStore((s) => s.withdraw)
   const showToast     = useAppStore((s) => s.showToast)
+  const { wallets }   = useWallets()
 
   const handleSubmit = async () => {
     const val = parseFloat(amount)
@@ -75,23 +77,41 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
     }
     if (!walletAddress) return
 
+    // Find the Privy embedded wallet
+    const embeddedWallet = wallets.find((w) => w.address === walletAddress)
+    if (!embeddedWallet) {
+      showToast('Wallet not found', 'error')
+      return
+    }
+
     setLoading(true)
     try {
-      const res = await fetch('/api/withdraw', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress, toAddress, amount: val }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        withdraw(val)
-        showToast(`Sent ${formatCurrency(val)} to ${toAddress.slice(0, 6)}...${toAddress.slice(-4)}`, 'success')
-        onClose()
-      } else {
-        showToast(data.error ?? 'Withdraw failed', 'error')
+      const eip1193 = await embeddedWallet.getEthereumProvider()
+      const provider = new ethers.BrowserProvider(eip1193)
+      const signer = await provider.getSigner()
+
+      const stgUsdcAddr = process.env.NEXT_PUBLIC_STGUSDC_ADDRESS
+      if (!stgUsdcAddr) {
+        showToast('Token contract not configured', 'error')
+        return
       }
-    } catch {
-      showToast('Withdraw request failed', 'error')
+
+      const erc20 = new ethers.Contract(
+        stgUsdcAddr,
+        ['function transfer(address to, uint256 amount) returns (bool)'],
+        signer
+      )
+
+      const amountUnits = ethers.parseUnits(String(val), 6)
+      const tx = await erc20.transfer(toAddress, amountUnits)
+      await tx.wait()
+
+      withdraw(val)
+      showToast(`Sent ${formatCurrency(val)} to ${toAddress.slice(0, 6)}...${toAddress.slice(-4)}`, 'success')
+      onClose()
+    } catch (err: any) {
+      console.error('[withdraw]', err)
+      showToast(err?.reason ?? err?.message ?? 'Withdraw failed', 'error')
     } finally {
       setLoading(false)
     }

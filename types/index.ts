@@ -98,7 +98,6 @@ export interface WalletState {
   isConnected: boolean
   address: string | null
   balance: number         // stgUSDC balance in lending pool
-  totalWithdrawn: number  // cumulative withdrawals (subtracted from on-chain balance during sync)
   baseAPY: number         // 2.0–3.0 (from MockLending)
   activeBoost: ActiveBoost | null
   accruedYield: number
